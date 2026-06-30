@@ -1,0 +1,39 @@
+spring.application.name=buddy_english_be
+
+# ===========================
+# Database — SQL Server
+# Fill in your local credentials
+# ===========================
+spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=Buddy_English_DB;encrypt=true;trustServerCertificate=true
+spring.datasource.username=YOUR_DB_USERNAME
+spring.datasource.password=YOUR_DB_PASSWORD
+spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+# ===========================
+# JPA / Hibernate
+# Use 'create' on first run, then switch to 'update'
+# ===========================
+spring.jpa.hibernate.ddl-auto=create
+spring.jpa.show-sql=false
+
+# ===========================
+# JWT
+# ===========================
+jwt.secret=YOUR_JWT_SECRET_BASE64
+jwt.access-token.expiration-ms=900000
+jwt.refresh-token.expiration-ms=604800000
+jwt.issuer=buddy-english
+
+# ===========================
+# Cookie & CORS
+# ===========================
+app.cookie.secure=false
+app.cors.allowed-origin=http://localhost:5173
+
+# ===========================
+# Gemini AI API
+# Get your key at: https://aistudio.google.com/app/apikey
+# ===========================
+gemini.api.key=YOUR_GEMINI_API_KEY
+gemini.api.url=https://generativelanguage.googleapis.com
+gemini.model=gemini-2.5-flash
