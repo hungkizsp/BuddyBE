@@ -10,6 +10,7 @@ public enum ErrorCode {
     INVALID_CREDENTIALS("Email or password is incorrect", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED("Authentication is required", HttpStatus.UNAUTHORIZED),
     USER_NOT_FOUND("User not found", HttpStatus.NOT_FOUND),
+    MISSION_NOT_FOUND("Mission not found", HttpStatus.NOT_FOUND),
     EMAIL_ALREADY_EXISTS("Email is already registered", HttpStatus.CONFLICT),
     USERNAME_ALREADY_EXISTS("Username is already taken", HttpStatus.CONFLICT),
     INTERNAL_SERVER_ERROR("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
