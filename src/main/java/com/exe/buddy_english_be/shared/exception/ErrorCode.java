@@ -16,7 +16,6 @@ public enum ErrorCode {
     CHILD_PROFILE_NOT_FOUND("Child profile not found", HttpStatus.NOT_FOUND),
     WORLD_NOT_FOUND("World not found", HttpStatus.NOT_FOUND),
     SCENARIO_NOT_FOUND("Scenario not found", HttpStatus.NOT_FOUND),
-    ADVENTURE_NOT_FOUND("Adventure not found", HttpStatus.NOT_FOUND),
     PROGRESS_NOT_FOUND("Progress not found", HttpStatus.NOT_FOUND),
     EMAIL_ALREADY_EXISTS("Email is already registered", HttpStatus.CONFLICT),
     USERNAME_ALREADY_EXISTS("Username is already taken", HttpStatus.CONFLICT),

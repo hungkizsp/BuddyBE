@@ -68,7 +68,7 @@ public class ProgressController {
         return ResponseEntity.ok(ApiResponse.success("Vocabulary progress deleted successfully", null));
     }
 
-    // Adventure Progress Endpoints
+    // World Progress Endpoints
 
     @GetMapping("/worlds")
     public ResponseEntity<ApiResponse<List<ChildWorldProgressResponse>>> getWorldProgressByChildId(
@@ -144,41 +144,4 @@ public class ProgressController {
         return ResponseEntity.ok(ApiResponse.success("Scenario progress deleted successfully", null));
     }
 
-    //Adventures api
-
-    @GetMapping("/adventures")
-    public ResponseEntity<ApiResponse<List<ChildAdventureProgressResponse>>> getAdventureProgressByChildId(
-            @RequestParam @NotNull(message = "childId is required") Long childId) {
-        List<ChildAdventureProgressResponse> response = progressService.getAdventureProgressByChildId(childId);
-        return ResponseEntity.ok(ApiResponse.success("Adventure progress fetched successfully", response));
-    }
-
-    @GetMapping("/adventures/{id}")
-    public ResponseEntity<ApiResponse<ChildAdventureProgressResponse>> getAdventureProgressById(@PathVariable Long id) {
-        ChildAdventureProgressResponse response = progressService.getAdventureProgressById(id);
-        return ResponseEntity.ok(ApiResponse.success("Adventure progress fetched successfully", response));
-    }
-
-    @PostMapping("/adventures")
-    public ResponseEntity<ApiResponse<ChildAdventureProgressResponse>> createAdventureProgress(
-            @Valid @RequestBody ChildAdventureProgressRequest request) {
-        ChildAdventureProgressResponse response = progressService.createAdventureProgress(request);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Adventure progress created successfully", response));
-    }
-
-    @PutMapping("/adventures/{id}")
-    public ResponseEntity<ApiResponse<ChildAdventureProgressResponse>> updateAdventureProgress(
-            @PathVariable Long id,
-            @Valid @RequestBody ChildAdventureProgressRequest request) {
-        ChildAdventureProgressResponse response = progressService.updateAdventureProgress(id, request);
-        return ResponseEntity.ok(ApiResponse.success("Adventure progress updated successfully", response));
-    }
-
-    @DeleteMapping("/adventures/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteAdventureProgress(@PathVariable Long id) {
-        progressService.deleteAdventureProgress(id);
-        return ResponseEntity.ok(ApiResponse.success("Adventure progress deleted successfully", null));
-    }
 }

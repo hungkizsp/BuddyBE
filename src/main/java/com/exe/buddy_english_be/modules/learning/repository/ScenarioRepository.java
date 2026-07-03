@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface ScenarioRepository extends JpaRepository<Scenario, Long> {
 
-    List<Scenario> findByAdventureIdOrderByOrderIndexAsc(Long adventureId);
+    List<Scenario> findByWorldIdOrderByOrderIndexAsc(Long worldId);
 }

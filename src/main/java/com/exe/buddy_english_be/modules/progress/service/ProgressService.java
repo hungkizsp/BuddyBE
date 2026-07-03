@@ -1,7 +1,5 @@
 package com.exe.buddy_english_be.modules.progress.service;
 
-import com.exe.buddy_english_be.modules.progress.dto.ChildAdventureProgressRequest;
-import com.exe.buddy_english_be.modules.progress.dto.ChildAdventureProgressResponse;
 import com.exe.buddy_english_be.modules.progress.dto.ChildScenarioProgressRequest;
 import com.exe.buddy_english_be.modules.progress.dto.ChildScenarioProgressResponse;
 import com.exe.buddy_english_be.modules.progress.dto.ChildVocabularyProgressRequest;
@@ -45,13 +43,4 @@ public interface ProgressService {
 
     void deleteScenarioProgress(Long id);
 
-    List<ChildAdventureProgressResponse> getAdventureProgressByChildId(Long childId);
-
-    ChildAdventureProgressResponse getAdventureProgressById(Long id);
-
-    ChildAdventureProgressResponse createAdventureProgress(ChildAdventureProgressRequest request);
-
-    ChildAdventureProgressResponse updateAdventureProgress(Long id, ChildAdventureProgressRequest request);
-
-    void deleteAdventureProgress(Long id);
 }
