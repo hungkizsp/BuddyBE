@@ -1,160 +1,385 @@
 package com.exe.buddy_english_be.modules.progress.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.exe.buddy_english_be.modules.learning.entity.Adventure;
+import com.exe.buddy_english_be.modules.learning.entity.Scenario;
+import com.exe.buddy_english_be.modules.learning.entity.World;
+import com.exe.buddy_english_be.modules.learning.repository.AdventureRepository;
+import com.exe.buddy_english_be.modules.learning.repository.ScenarioRepository;
+import com.exe.buddy_english_be.modules.learning.repository.WorldRepository;
 import com.exe.buddy_english_be.modules.profile.entity.ChildProfile;
 import com.exe.buddy_english_be.modules.profile.repository.ChildProfileRepository;
-import com.exe.buddy_english_be.modules.progress.dto.AdventureProgressResponse;
-import com.exe.buddy_english_be.modules.progress.dto.ChildProgressSummaryResponse;
-import com.exe.buddy_english_be.modules.progress.dto.VocabularyProgressResponse;
-import com.exe.buddy_english_be.modules.progress.dto.WorldProgressResponse;
+import com.exe.buddy_english_be.modules.progress.dto.ChildAdventureProgressRequest;
+import com.exe.buddy_english_be.modules.progress.dto.ChildAdventureProgressResponse;
+import com.exe.buddy_english_be.modules.progress.dto.ChildScenarioProgressRequest;
+import com.exe.buddy_english_be.modules.progress.dto.ChildScenarioProgressResponse;
+import com.exe.buddy_english_be.modules.progress.dto.ChildVocabularyProgressRequest;
+import com.exe.buddy_english_be.modules.progress.dto.ChildVocabularyProgressResponse;
+import com.exe.buddy_english_be.modules.progress.dto.ChildWorldProgressRequest;
+import com.exe.buddy_english_be.modules.progress.dto.ChildWorldProgressResponse;
 import com.exe.buddy_english_be.modules.progress.entity.ChildAdventureProgress;
+import com.exe.buddy_english_be.modules.progress.entity.ChildScenarioProgress;
 import com.exe.buddy_english_be.modules.progress.entity.ChildVocabularyProgress;
 import com.exe.buddy_english_be.modules.progress.entity.ChildWorldProgress;
 import com.exe.buddy_english_be.modules.progress.enums.ProgressStatus;
 import com.exe.buddy_english_be.modules.progress.repository.ChildAdventureProgressRepository;
+import com.exe.buddy_english_be.modules.progress.repository.ChildScenarioProgressRepository;
 import com.exe.buddy_english_be.modules.progress.repository.ChildVocabularyProgressRepository;
 import com.exe.buddy_english_be.modules.progress.repository.ChildWorldProgressRepository;
+import com.exe.buddy_english_be.modules.vocabulary.entity.Vocabulary;
+import com.exe.buddy_english_be.modules.vocabulary.repository.VocabularyRepository;
 import com.exe.buddy_english_be.shared.exception.BusinessException;
 import com.exe.buddy_english_be.shared.exception.ErrorCode;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
-@Slf4j
 @AllArgsConstructor
 public class ProgressServiceImpl implements ProgressService {
-
-    private final ChildProfileRepository childProfileRepository;
-    private final ChildWorldProgressRepository worldProgressRepository;
-    private final ChildAdventureProgressRepository adventureProgressRepository;
     private final ChildVocabularyProgressRepository vocabularyProgressRepository;
-
-    // ─── Summary ─────────────────────────────────────────────────────────────
+    private final ChildWorldProgressRepository worldProgressRepository;
+    private final ChildScenarioProgressRepository scenarioProgressRepository;
+    private final ChildAdventureProgressRepository adventureProgressRepository;
+    private final ChildProfileRepository childProfileRepository;
+    private final VocabularyRepository vocabularyRepository;
+    private final WorldRepository worldRepository;
+    private final ScenarioRepository scenarioRepository;
+    private final AdventureRepository adventureRepository;
 
     @Override
     @Transactional(readOnly = true)
-    public ChildProgressSummaryResponse getProgressSummary(Long userId) {
-        log.info("Fetching progress summary for userId={}", userId);
-        ChildProfile child = resolveChild(userId);
+    public List<ChildVocabularyProgressResponse> getVocabularyProgressByChildId(Long childId) {
+        return vocabularyProgressRepository.findByChildIdOrderByLastPracticedDesc(childId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
-        List<WorldProgressResponse> worldProgress = mapWorldProgress(
-                worldProgressRepository.findByChildId(child.getId()));
-        List<AdventureProgressResponse> adventureProgress = mapAdventureProgress(
-                adventureProgressRepository.findByChildId(child.getId()));
-        List<VocabularyProgressResponse> vocabularyProgress = mapVocabularyProgress(
-                vocabularyProgressRepository.findByChildIdOrderByLastPracticedDesc(child.getId()));
+    @Override
+    @Transactional(readOnly = true)
+    public List<ChildVocabularyProgressResponse> getDueVocabularyProgress(Long childId) {
+        return vocabularyProgressRepository.findByChildIdAndNextReviewAtBefore(childId, LocalDateTime.now()).stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
-        long worldsUnlocked = worldProgress.stream()
-                .filter(w -> w.status() != ProgressStatus.LOCKED)
-                .count();
-        long adventuresCompleted = adventureProgress.stream()
-                .filter(a -> a.status() == ProgressStatus.COMPLETED)
-                .count();
+    @Override
+    @Transactional(readOnly = true)
+    public ChildVocabularyProgressResponse getVocabularyProgressById(Long id) {
+        return toResponse(findVocabularyProgress(id));
+    }
 
-        return ChildProgressSummaryResponse.builder()
-                .childId(child.getId())
-                .nickname(child.getNickname())
-                .level(child.getLevel())
-                .xp(child.getXp())
-                .coins(child.getCoins())
-                .streakDays(child.getStreakDays())
-                .totalWordsLearned(vocabularyProgress.size())
-                .totalWorldsUnlocked((int) worldsUnlocked)
-                .totalAdventuresCompleted((int) adventuresCompleted)
-                .worldProgress(worldProgress)
-                .adventureProgress(adventureProgress)
-                .vocabularyProgress(vocabularyProgress)
+    @Override
+    @Transactional
+    public ChildVocabularyProgressResponse createVocabularyProgress(ChildVocabularyProgressRequest request) {
+        ChildVocabularyProgress progress = ChildVocabularyProgress.builder()
+                .child(findChild(request.childId()))
+                .vocabulary(findVocabulary(request.vocabularyId()))
+                .masteryLevel(valueOrDefault(request.masteryLevel(), 1))
+                .correctCount(valueOrDefault(request.correctCount(), 0))
+                .wrongCount(valueOrDefault(request.wrongCount(), 0))
+                .confidenceScore(valueOrDefault(request.confidenceScore(), 0.0))
+                .firstLearnedAt(request.firstLearnedAt())
+                .nextReviewAt(request.nextReviewAt())
+                .lastPracticed(request.lastPracticed())
                 .build();
-    }
 
-    // ─── Per-category ─────────────────────────────────────────────────────────
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<WorldProgressResponse> getWorldProgress(Long userId) {
-        log.info("Fetching world progress for userId={}", userId);
-        ChildProfile child = resolveChild(userId);
-        return mapWorldProgress(worldProgressRepository.findByChildId(child.getId()));
+        return toResponse(vocabularyProgressRepository.save(progress));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<AdventureProgressResponse> getAdventureProgress(Long userId) {
-        log.info("Fetching adventure progress for userId={}", userId);
-        ChildProfile child = resolveChild(userId);
-        return mapAdventureProgress(adventureProgressRepository.findByChildId(child.getId()));
+    @Transactional
+    public ChildVocabularyProgressResponse updateVocabularyProgress(Long id, ChildVocabularyProgressRequest request) {
+        ChildVocabularyProgress progress = findVocabularyProgress(id);
+        progress.setChild(findChild(request.childId()));
+        progress.setVocabulary(findVocabulary(request.vocabularyId()));
+        progress.setMasteryLevel(valueOrDefault(request.masteryLevel(), progress.getMasteryLevel()));
+        progress.setCorrectCount(valueOrDefault(request.correctCount(), progress.getCorrectCount()));
+        progress.setWrongCount(valueOrDefault(request.wrongCount(), progress.getWrongCount()));
+        progress.setConfidenceScore(valueOrDefault(request.confidenceScore(), progress.getConfidenceScore()));
+        progress.setFirstLearnedAt(request.firstLearnedAt());
+        progress.setNextReviewAt(request.nextReviewAt());
+        progress.setLastPracticed(request.lastPracticed());
+
+        return toResponse(vocabularyProgressRepository.save(progress));
+    }
+
+    @Override
+    @Transactional
+    public void deleteVocabularyProgress(Long id) {
+        vocabularyProgressRepository.delete(findVocabularyProgress(id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<VocabularyProgressResponse> getVocabularyProgress(Long userId) {
-        log.info("Fetching vocabulary progress for userId={}", userId);
-        ChildProfile child = resolveChild(userId);
-        return mapVocabularyProgress(
-                vocabularyProgressRepository.findByChildIdOrderByLastPracticedDesc(child.getId()));
+    public List<ChildWorldProgressResponse> getWorldProgressByChildId(Long childId) {
+        return worldProgressRepository.findByChildId(childId).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<VocabularyProgressResponse> getDueVocabulary(Long userId) {
-        log.info("Fetching due vocabulary for userId={}", userId);
-        ChildProfile child = resolveChild(userId);
-        return mapVocabularyProgress(
-                vocabularyProgressRepository.findByChildIdAndNextReviewAtBefore(
-                        child.getId(), LocalDateTime.now()));
+    public ChildWorldProgressResponse getWorldProgressById(Long id) {
+        return toResponse(findWorldProgress(id));
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public ChildWorldProgressResponse createWorldProgress(ChildWorldProgressRequest request) {
+        ChildWorldProgress progress = ChildWorldProgress.builder()
+                .child(findChild(request.childId()))
+                .world(findWorld(request.worldId()))
+                .status(valueOrDefault(request.status(), ProgressStatus.LOCKED))
+                .completionPercentage(valueOrDefault(request.completionPercentage(), 0))
+                .lastPlayedAt(request.lastPlayedAt())
+                .unlockedAt(request.unlockedAt())
+                .build();
 
-    private ChildProfile resolveChild(Long userId) {
-        return childProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        return toResponse(worldProgressRepository.save(progress));
     }
 
-    private List<WorldProgressResponse> mapWorldProgress(List<ChildWorldProgress> list) {
-        return list.stream().map(w -> WorldProgressResponse.builder()
-                .id(w.getId())
-                .worldId(w.getWorld() != null ? w.getWorld().getId() : null)
-                .worldName(w.getWorld() != null ? w.getWorld().getName() : null)
-                .status(w.getStatus())
-                .completionPercentage(w.getCompletionPercentage())
-                .lastPlayedAt(w.getLastPlayedAt())
-                .unlockedAt(w.getUnlockedAt())
-                .build()).toList();
+    @Override
+    @Transactional
+    public ChildWorldProgressResponse updateWorldProgress(Long id, ChildWorldProgressRequest request) {
+        ChildWorldProgress progress = findWorldProgress(id);
+        progress.setChild(findChild(request.childId()));
+        progress.setWorld(findWorld(request.worldId()));
+        progress.setStatus(valueOrDefault(request.status(), progress.getStatus()));
+        progress.setCompletionPercentage(valueOrDefault(request.completionPercentage(), progress.getCompletionPercentage()));
+        progress.setLastPlayedAt(request.lastPlayedAt());
+        progress.setUnlockedAt(request.unlockedAt());
+
+        return toResponse(worldProgressRepository.save(progress));
     }
 
-    private List<AdventureProgressResponse> mapAdventureProgress(List<ChildAdventureProgress> list) {
-        return list.stream().map(a -> AdventureProgressResponse.builder()
-                .id(a.getId())
-                .adventureId(a.getAdventure() != null ? a.getAdventure().getId() : null)
-                .adventureName(a.getAdventure() != null ? a.getAdventure().getName() : null)
-                .status(a.getStatus())
-                .score(a.getScore())
-                .bestScore(a.getBestScore())
-                .attemptCount(a.getAttemptCount())
-                .lastPlayedAt(a.getLastPlayedAt())
-                .completedAt(a.getCompletedAt())
-                .build()).toList();
+    @Override
+    @Transactional
+    public void deleteWorldProgress(Long id) {
+        worldProgressRepository.delete(findWorldProgress(id));
     }
 
-    private List<VocabularyProgressResponse> mapVocabularyProgress(List<ChildVocabularyProgress> list) {
-        return list.stream().map(v -> VocabularyProgressResponse.builder()
-                .id(v.getId())
-                .vocabularyId(v.getVocabulary() != null ? v.getVocabulary().getId() : null)
-                .word(v.getVocabulary() != null ? v.getVocabulary().getWord() : null)
-                .meaning(v.getVocabulary() != null ? v.getVocabulary().getMeaning() : null)
-                .masteryLevel(v.getMasteryLevel())
-                .correctCount(v.getCorrectCount())
-                .wrongCount(v.getWrongCount())
-                .confidenceScore(v.getConfidenceScore())
-                .firstLearnedAt(v.getFirstLearnedAt())
-                .nextReviewAt(v.getNextReviewAt())
-                .lastPracticed(v.getLastPracticed())
-                .build()).toList();
+    @Override
+    @Transactional(readOnly = true)
+    public List<ChildScenarioProgressResponse> getScenarioProgressByChildId(Long childId) {
+        return scenarioProgressRepository.findByChildId(childId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChildScenarioProgressResponse getScenarioProgressById(Long id) {
+        return toResponse(findScenarioProgress(id));
+    }
+
+    @Override
+    @Transactional
+    public ChildScenarioProgressResponse createScenarioProgress(ChildScenarioProgressRequest request) {
+        ChildScenarioProgress progress = ChildScenarioProgress.builder()
+                .child(findChild(request.childId()))
+                .scenario(findScenario(request.scenarioId()))
+                .status(normalize(request.status()))
+                .attempts(valueOrDefault(request.attempts(), 0))
+                .completedAt(request.completedAt())
+                .build();
+
+        return toResponse(scenarioProgressRepository.save(progress));
+    }
+
+    @Override
+    @Transactional
+    public ChildScenarioProgressResponse updateScenarioProgress(Long id, ChildScenarioProgressRequest request) {
+        ChildScenarioProgress progress = findScenarioProgress(id);
+        progress.setChild(findChild(request.childId()));
+        progress.setScenario(findScenario(request.scenarioId()));
+        progress.setStatus(normalize(request.status()));
+        progress.setAttempts(valueOrDefault(request.attempts(), progress.getAttempts()));
+        progress.setCompletedAt(request.completedAt());
+
+        return toResponse(scenarioProgressRepository.save(progress));
+    }
+
+    @Override
+    @Transactional
+    public void deleteScenarioProgress(Long id) {
+        scenarioProgressRepository.delete(findScenarioProgress(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ChildAdventureProgressResponse> getAdventureProgressByChildId(Long childId) {
+        return adventureProgressRepository.findByChildId(childId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChildAdventureProgressResponse getAdventureProgressById(Long id) {
+        return toResponse(findAdventureProgress(id));
+    }
+
+    @Override
+    @Transactional
+    public ChildAdventureProgressResponse createAdventureProgress(ChildAdventureProgressRequest request) {
+        ChildAdventureProgress progress = ChildAdventureProgress.builder()
+                .child(findChild(request.childId()))
+                .adventure(findAdventure(request.adventureId()))
+                .status(valueOrDefault(request.status(), ProgressStatus.LOCKED))
+                .score(valueOrDefault(request.score(), 0))
+                .bestScore(valueOrDefault(request.bestScore(), 0))
+                .attemptCount(valueOrDefault(request.attemptCount(), 0))
+                .lastPlayedAt(request.lastPlayedAt())
+                .completedAt(request.completedAt())
+                .build();
+
+        return toResponse(adventureProgressRepository.save(progress));
+    }
+
+    @Override
+    @Transactional
+    public ChildAdventureProgressResponse updateAdventureProgress(Long id, ChildAdventureProgressRequest request) {
+        ChildAdventureProgress progress = findAdventureProgress(id);
+        progress.setChild(findChild(request.childId()));
+        progress.setAdventure(findAdventure(request.adventureId()));
+        progress.setStatus(valueOrDefault(request.status(), progress.getStatus()));
+        progress.setScore(valueOrDefault(request.score(), progress.getScore()));
+        progress.setBestScore(valueOrDefault(request.bestScore(), progress.getBestScore()));
+        progress.setAttemptCount(valueOrDefault(request.attemptCount(), progress.getAttemptCount()));
+        progress.setLastPlayedAt(request.lastPlayedAt());
+        progress.setCompletedAt(request.completedAt());
+
+        return toResponse(adventureProgressRepository.save(progress));
+    }
+
+    @Override
+    @Transactional
+    public void deleteAdventureProgress(Long id) {
+        adventureProgressRepository.delete(findAdventureProgress(id));
+    }
+
+    private ChildVocabularyProgress findVocabularyProgress(Long id) {
+        return vocabularyProgressRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROGRESS_NOT_FOUND));
+    }
+
+    private ChildWorldProgress findWorldProgress(Long id) {
+        return worldProgressRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROGRESS_NOT_FOUND));
+    }
+
+    private ChildScenarioProgress findScenarioProgress(Long id) {
+        return scenarioProgressRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROGRESS_NOT_FOUND));
+    }
+
+    private ChildAdventureProgress findAdventureProgress(Long id) {
+        return adventureProgressRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROGRESS_NOT_FOUND));
+    }
+
+    private ChildProfile findChild(Long id) {
+        return childProfileRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CHILD_PROFILE_NOT_FOUND));
+    }
+
+    private Vocabulary findVocabulary(Long id) {
+        return vocabularyRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.VOCABULARY_NOT_FOUND));
+    }
+
+    private World findWorld(Long id) {
+        return worldRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.WORLD_NOT_FOUND));
+    }
+
+    private Scenario findScenario(Long id) {
+        return scenarioRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SCENARIO_NOT_FOUND));
+    }
+
+    private Adventure findAdventure(Long id) {
+        return adventureRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ADVENTURE_NOT_FOUND));
+    }
+
+    private ChildVocabularyProgressResponse toResponse(ChildVocabularyProgress progress) {
+        return new ChildVocabularyProgressResponse(
+                progress.getId(),
+                progress.getChild().getId(),
+                progress.getVocabulary().getId(),
+                progress.getVocabulary().getWord(),
+                progress.getMasteryLevel(),
+                progress.getCorrectCount(),
+                progress.getWrongCount(),
+                progress.getConfidenceScore(),
+                progress.getFirstLearnedAt(),
+                progress.getNextReviewAt(),
+                progress.getLastPracticed(),
+                progress.getCreatedAt(),
+                progress.getUpdatedAt()
+        );
+    }
+
+    private ChildWorldProgressResponse toResponse(ChildWorldProgress progress) {
+        return new ChildWorldProgressResponse(
+                progress.getId(),
+                progress.getChild().getId(),
+                progress.getWorld().getId(),
+                progress.getWorld().getName(),
+                progress.getStatus(),
+                progress.getCompletionPercentage(),
+                progress.getLastPlayedAt(),
+                progress.getUnlockedAt(),
+                progress.getCreatedAt(),
+                progress.getUpdatedAt()
+        );
+    }
+
+    private ChildScenarioProgressResponse toResponse(ChildScenarioProgress progress) {
+        return new ChildScenarioProgressResponse(
+                progress.getId(),
+                progress.getChild().getId(),
+                progress.getScenario().getId(),
+                progress.getScenario().getTitle(),
+                progress.getStatus(),
+                progress.getAttempts(),
+                progress.getCompletedAt(),
+                progress.getCreatedAt(),
+                progress.getUpdatedAt()
+        );
+    }
+
+    private ChildAdventureProgressResponse toResponse(ChildAdventureProgress progress) {
+        return new ChildAdventureProgressResponse(
+                progress.getId(),
+                progress.getChild().getId(),
+                progress.getAdventure().getId(),
+                progress.getAdventure().getName(),
+                progress.getStatus(),
+                progress.getScore(),
+                progress.getBestScore(),
+                progress.getAttemptCount(),
+                progress.getLastPlayedAt(),
+                progress.getCompletedAt(),
+                progress.getCreatedAt(),
+                progress.getUpdatedAt()
+        );
+    }
+
+    private <T> T valueOrDefault(T value, T defaultValue) {
+        return value == null ? defaultValue : value;
+    }
+
+    private String normalize(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

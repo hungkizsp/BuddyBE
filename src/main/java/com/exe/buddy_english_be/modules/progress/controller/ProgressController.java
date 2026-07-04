@@ -1,73 +1,184 @@
 package com.exe.buddy_english_be.modules.progress.controller;
 
-import com.exe.buddy_english_be.modules.progress.dto.AdventureProgressResponse;
-import com.exe.buddy_english_be.modules.progress.dto.ChildProgressSummaryResponse;
-import com.exe.buddy_english_be.modules.progress.dto.VocabularyProgressResponse;
-import com.exe.buddy_english_be.modules.progress.dto.WorldProgressResponse;
+import com.exe.buddy_english_be.modules.progress.dto.*;
 import com.exe.buddy_english_be.modules.progress.service.ProgressService;
 import com.exe.buddy_english_be.shared.response.ApiResponse;
-
-import lombok.AllArgsConstructor;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
+@Validated
+@RestController("modulesProgressController")
 @RequestMapping("/api/progress")
-@AllArgsConstructor
 public class ProgressController {
-
     private final ProgressService progressService;
 
-    /**
-     * Returns the full progress summary for the authenticated child:
-     * worlds, adventures, vocabulary, XP, coins, streaks.
-     */
-    @GetMapping("/summary")
-    public ResponseEntity<ApiResponse<ChildProgressSummaryResponse>> getProgressSummary(
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        ChildProgressSummaryResponse response = progressService.getProgressSummary(userId);
-        return ResponseEntity.ok(ApiResponse.success("Progress summary fetched successfully", response));
+    public ProgressController(ProgressService progressService) {
+        this.progressService = progressService;
     }
 
-    /** Returns world-level progress for the authenticated child. */
-    @GetMapping("/worlds")
-    public ResponseEntity<ApiResponse<List<WorldProgressResponse>>> getWorldProgress(
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        List<WorldProgressResponse> response = progressService.getWorldProgress(userId);
-        return ResponseEntity.ok(ApiResponse.success("World progress fetched successfully", response));
-    }
+    // Vocabulary Progress Endpoints
 
-    /** Returns adventure-level progress for the authenticated child. */
-    @GetMapping("/adventures")
-    public ResponseEntity<ApiResponse<List<AdventureProgressResponse>>> getAdventureProgress(
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        List<AdventureProgressResponse> response = progressService.getAdventureProgress(userId);
-        return ResponseEntity.ok(ApiResponse.success("Adventure progress fetched successfully", response));
-    }
-
-    /** Returns vocabulary progress (all learned words) for the authenticated child. */
-    @GetMapping("/vocabulary")
-    public ResponseEntity<ApiResponse<List<VocabularyProgressResponse>>> getVocabularyProgress(
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        List<VocabularyProgressResponse> response = progressService.getVocabularyProgress(userId);
+    @GetMapping("/vocabularies")
+    public ResponseEntity<ApiResponse<List<ChildVocabularyProgressResponse>>> getVocabularyProgressByChildId(
+            @RequestParam @NotNull(message = "childId is required") Long childId) {
+        List<ChildVocabularyProgressResponse> response = progressService.getVocabularyProgressByChildId(childId);
         return ResponseEntity.ok(ApiResponse.success("Vocabulary progress fetched successfully", response));
     }
 
-    /** Returns words due for spaced-repetition review. */
-    @GetMapping("/vocabulary/due")
-    public ResponseEntity<ApiResponse<List<VocabularyProgressResponse>>> getDueVocabulary(
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        List<VocabularyProgressResponse> response = progressService.getDueVocabulary(userId);
-        return ResponseEntity.ok(ApiResponse.success("Due vocabulary fetched successfully", response));
+    @GetMapping("/vocabularies/due")
+    public ResponseEntity<ApiResponse<List<ChildVocabularyProgressResponse>>> getDueVocabularyProgress(
+            @RequestParam @NotNull(message = "childId is required") Long childId) {
+        List<ChildVocabularyProgressResponse> response = progressService.getDueVocabularyProgress(childId);
+        return ResponseEntity.ok(ApiResponse.success("Due vocabulary progress fetched successfully", response));
+    }
+
+    @GetMapping("/vocabularies/{id}")
+    public ResponseEntity<ApiResponse<ChildVocabularyProgressResponse>> getVocabularyProgressById(
+            @PathVariable Long id) {
+        ChildVocabularyProgressResponse response = progressService.getVocabularyProgressById(id);
+        return ResponseEntity.ok(ApiResponse.success("Vocabulary progress fetched successfully", response));
+    }
+
+    @PostMapping("/vocabularies")
+    public ResponseEntity<ApiResponse<ChildVocabularyProgressResponse>> createVocabularyProgress(
+            @Valid @RequestBody ChildVocabularyProgressRequest request) {
+        ChildVocabularyProgressResponse response = progressService.createVocabularyProgress(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Vocabulary progress created successfully", response));
+    }
+
+    @PutMapping("/vocabularies/{id}")
+    public ResponseEntity<ApiResponse<ChildVocabularyProgressResponse>> updateVocabularyProgress(
+            @PathVariable Long id,
+            @Valid @RequestBody ChildVocabularyProgressRequest request) {
+        ChildVocabularyProgressResponse response = progressService.updateVocabularyProgress(id, request);
+        return ResponseEntity.ok(ApiResponse.success("Vocabulary progress updated successfully", response));
+    }
+
+    @DeleteMapping("/vocabularies/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteVocabularyProgress(@PathVariable Long id) {
+        progressService.deleteVocabularyProgress(id);
+        return ResponseEntity.ok(ApiResponse.success("Vocabulary progress deleted successfully", null));
+    }
+
+    // Adventure Progress Endpoints
+
+    @GetMapping("/worlds")
+    public ResponseEntity<ApiResponse<List<ChildWorldProgressResponse>>> getWorldProgressByChildId(
+            @RequestParam @NotNull(message = "childId is required") Long childId) {
+        List<ChildWorldProgressResponse> response = progressService.getWorldProgressByChildId(childId);
+        return ResponseEntity.ok(ApiResponse.success("World progress fetched successfully", response));
+    }
+
+    @GetMapping("/worlds/{id}")
+    public ResponseEntity<ApiResponse<ChildWorldProgressResponse>> getWorldProgressById(@PathVariable Long id) {
+        ChildWorldProgressResponse response = progressService.getWorldProgressById(id);
+        return ResponseEntity.ok(ApiResponse.success("World progress fetched successfully", response));
+    }
+
+    @PostMapping("/worlds")
+    public ResponseEntity<ApiResponse<ChildWorldProgressResponse>> createWorldProgress(
+            @Valid @RequestBody ChildWorldProgressRequest request) {
+        ChildWorldProgressResponse response = progressService.createWorldProgress(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("World progress created successfully", response));
+    }
+
+    @PutMapping("/worlds/{id}")
+    public ResponseEntity<ApiResponse<ChildWorldProgressResponse>> updateWorldProgress(
+            @PathVariable Long id,
+            @Valid @RequestBody ChildWorldProgressRequest request) {
+        ChildWorldProgressResponse response = progressService.updateWorldProgress(id, request);
+        return ResponseEntity.ok(ApiResponse.success("World progress updated successfully", response));
+    }
+
+    @DeleteMapping("/worlds/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteWorldProgress(@PathVariable Long id) {
+        progressService.deleteWorldProgress(id);
+        return ResponseEntity.ok(ApiResponse.success("World progress deleted successfully", null));
+    }
+
+    // Scenario Progress Endpoints
+
+    @GetMapping("/scenarios")
+    public ResponseEntity<ApiResponse<List<ChildScenarioProgressResponse>>> getScenarioProgressByChildId(
+            @RequestParam @NotNull(message = "childId is required") Long childId) {
+        List<ChildScenarioProgressResponse> response = progressService.getScenarioProgressByChildId(childId);
+        return ResponseEntity.ok(ApiResponse.success("Scenario progress fetched successfully", response));
+    }
+
+    @GetMapping("/scenarios/{id}")
+    public ResponseEntity<ApiResponse<ChildScenarioProgressResponse>> getScenarioProgressById(@PathVariable Long id) {
+        ChildScenarioProgressResponse response = progressService.getScenarioProgressById(id);
+        return ResponseEntity.ok(ApiResponse.success("Scenario progress fetched successfully", response));
+    }
+
+    @PostMapping("/scenarios")
+    public ResponseEntity<ApiResponse<ChildScenarioProgressResponse>> createScenarioProgress(
+            @Valid @RequestBody ChildScenarioProgressRequest request) {
+        ChildScenarioProgressResponse response = progressService.createScenarioProgress(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Scenario progress created successfully", response));
+    }
+
+    @PutMapping("/scenarios/{id}")
+    public ResponseEntity<ApiResponse<ChildScenarioProgressResponse>> updateScenarioProgress(
+            @PathVariable Long id,
+            @Valid @RequestBody ChildScenarioProgressRequest request) {
+        ChildScenarioProgressResponse response = progressService.updateScenarioProgress(id, request);
+        return ResponseEntity.ok(ApiResponse.success("Scenario progress updated successfully", response));
+    }
+
+    @DeleteMapping("/scenarios/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteScenarioProgress(@PathVariable Long id) {
+        progressService.deleteScenarioProgress(id);
+        return ResponseEntity.ok(ApiResponse.success("Scenario progress deleted successfully", null));
+    }
+
+    //Adventures api
+
+    @GetMapping("/adventures")
+    public ResponseEntity<ApiResponse<List<ChildAdventureProgressResponse>>> getAdventureProgressByChildId(
+            @RequestParam @NotNull(message = "childId is required") Long childId) {
+        List<ChildAdventureProgressResponse> response = progressService.getAdventureProgressByChildId(childId);
+        return ResponseEntity.ok(ApiResponse.success("Adventure progress fetched successfully", response));
+    }
+
+    @GetMapping("/adventures/{id}")
+    public ResponseEntity<ApiResponse<ChildAdventureProgressResponse>> getAdventureProgressById(@PathVariable Long id) {
+        ChildAdventureProgressResponse response = progressService.getAdventureProgressById(id);
+        return ResponseEntity.ok(ApiResponse.success("Adventure progress fetched successfully", response));
+    }
+
+    @PostMapping("/adventures")
+    public ResponseEntity<ApiResponse<ChildAdventureProgressResponse>> createAdventureProgress(
+            @Valid @RequestBody ChildAdventureProgressRequest request) {
+        ChildAdventureProgressResponse response = progressService.createAdventureProgress(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Adventure progress created successfully", response));
+    }
+
+    @PutMapping("/adventures/{id}")
+    public ResponseEntity<ApiResponse<ChildAdventureProgressResponse>> updateAdventureProgress(
+            @PathVariable Long id,
+            @Valid @RequestBody ChildAdventureProgressRequest request) {
+        ChildAdventureProgressResponse response = progressService.updateAdventureProgress(id, request);
+        return ResponseEntity.ok(ApiResponse.success("Adventure progress updated successfully", response));
+    }
+
+    @DeleteMapping("/adventures/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteAdventureProgress(@PathVariable Long id) {
+        progressService.deleteAdventureProgress(id);
+        return ResponseEntity.ok(ApiResponse.success("Adventure progress deleted successfully", null));
     }
 }
