@@ -6,28 +6,22 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.exe.buddy_english_be.modules.learning.entity.Adventure;
 import com.exe.buddy_english_be.modules.learning.entity.Scenario;
 import com.exe.buddy_english_be.modules.learning.entity.World;
-import com.exe.buddy_english_be.modules.learning.repository.AdventureRepository;
 import com.exe.buddy_english_be.modules.learning.repository.ScenarioRepository;
 import com.exe.buddy_english_be.modules.learning.repository.WorldRepository;
 import com.exe.buddy_english_be.modules.profile.entity.ChildProfile;
 import com.exe.buddy_english_be.modules.profile.repository.ChildProfileRepository;
-import com.exe.buddy_english_be.modules.progress.dto.ChildAdventureProgressRequest;
-import com.exe.buddy_english_be.modules.progress.dto.ChildAdventureProgressResponse;
 import com.exe.buddy_english_be.modules.progress.dto.ChildScenarioProgressRequest;
 import com.exe.buddy_english_be.modules.progress.dto.ChildScenarioProgressResponse;
 import com.exe.buddy_english_be.modules.progress.dto.ChildVocabularyProgressRequest;
 import com.exe.buddy_english_be.modules.progress.dto.ChildVocabularyProgressResponse;
 import com.exe.buddy_english_be.modules.progress.dto.ChildWorldProgressRequest;
 import com.exe.buddy_english_be.modules.progress.dto.ChildWorldProgressResponse;
-import com.exe.buddy_english_be.modules.progress.entity.ChildAdventureProgress;
 import com.exe.buddy_english_be.modules.progress.entity.ChildScenarioProgress;
 import com.exe.buddy_english_be.modules.progress.entity.ChildVocabularyProgress;
 import com.exe.buddy_english_be.modules.progress.entity.ChildWorldProgress;
 import com.exe.buddy_english_be.modules.progress.enums.ProgressStatus;
-import com.exe.buddy_english_be.modules.progress.repository.ChildAdventureProgressRepository;
 import com.exe.buddy_english_be.modules.progress.repository.ChildScenarioProgressRepository;
 import com.exe.buddy_english_be.modules.progress.repository.ChildVocabularyProgressRepository;
 import com.exe.buddy_english_be.modules.progress.repository.ChildWorldProgressRepository;
@@ -44,12 +38,10 @@ public class ProgressServiceImpl implements ProgressService {
     private final ChildVocabularyProgressRepository vocabularyProgressRepository;
     private final ChildWorldProgressRepository worldProgressRepository;
     private final ChildScenarioProgressRepository scenarioProgressRepository;
-    private final ChildAdventureProgressRepository adventureProgressRepository;
     private final ChildProfileRepository childProfileRepository;
     private final VocabularyRepository vocabularyRepository;
     private final WorldRepository worldRepository;
     private final ScenarioRepository scenarioRepository;
-    private final AdventureRepository adventureRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -183,8 +175,11 @@ public class ProgressServiceImpl implements ProgressService {
         ChildScenarioProgress progress = ChildScenarioProgress.builder()
                 .child(findChild(request.childId()))
                 .scenario(findScenario(request.scenarioId()))
-                .status(normalize(request.status()))
-                .attempts(valueOrDefault(request.attempts(), 0))
+                .status(valueOrDefault(request.status(), ProgressStatus.LOCKED))
+                .score(valueOrDefault(request.score(), 0))
+                .bestScore(valueOrDefault(request.bestScore(), 0))
+                .attemptCount(valueOrDefault(request.attemptCount(), 0))
+                .lastPlayedAt(request.lastPlayedAt())
                 .completedAt(request.completedAt())
                 .build();
 
@@ -197,8 +192,11 @@ public class ProgressServiceImpl implements ProgressService {
         ChildScenarioProgress progress = findScenarioProgress(id);
         progress.setChild(findChild(request.childId()));
         progress.setScenario(findScenario(request.scenarioId()));
-        progress.setStatus(normalize(request.status()));
-        progress.setAttempts(valueOrDefault(request.attempts(), progress.getAttempts()));
+        progress.setStatus(valueOrDefault(request.status(), progress.getStatus()));
+        progress.setScore(valueOrDefault(request.score(), progress.getScore()));
+        progress.setBestScore(valueOrDefault(request.bestScore(), progress.getBestScore()));
+        progress.setAttemptCount(valueOrDefault(request.attemptCount(), progress.getAttemptCount()));
+        progress.setLastPlayedAt(request.lastPlayedAt());
         progress.setCompletedAt(request.completedAt());
 
         return toResponse(scenarioProgressRepository.save(progress));
@@ -208,59 +206,6 @@ public class ProgressServiceImpl implements ProgressService {
     @Transactional
     public void deleteScenarioProgress(Long id) {
         scenarioProgressRepository.delete(findScenarioProgress(id));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ChildAdventureProgressResponse> getAdventureProgressByChildId(Long childId) {
-        return adventureProgressRepository.findByChildId(childId).stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ChildAdventureProgressResponse getAdventureProgressById(Long id) {
-        return toResponse(findAdventureProgress(id));
-    }
-
-    @Override
-    @Transactional
-    public ChildAdventureProgressResponse createAdventureProgress(ChildAdventureProgressRequest request) {
-        ChildAdventureProgress progress = ChildAdventureProgress.builder()
-                .child(findChild(request.childId()))
-                .adventure(findAdventure(request.adventureId()))
-                .status(valueOrDefault(request.status(), ProgressStatus.LOCKED))
-                .score(valueOrDefault(request.score(), 0))
-                .bestScore(valueOrDefault(request.bestScore(), 0))
-                .attemptCount(valueOrDefault(request.attemptCount(), 0))
-                .lastPlayedAt(request.lastPlayedAt())
-                .completedAt(request.completedAt())
-                .build();
-
-        return toResponse(adventureProgressRepository.save(progress));
-    }
-
-    @Override
-    @Transactional
-    public ChildAdventureProgressResponse updateAdventureProgress(Long id, ChildAdventureProgressRequest request) {
-        ChildAdventureProgress progress = findAdventureProgress(id);
-        progress.setChild(findChild(request.childId()));
-        progress.setAdventure(findAdventure(request.adventureId()));
-        progress.setStatus(valueOrDefault(request.status(), progress.getStatus()));
-        progress.setScore(valueOrDefault(request.score(), progress.getScore()));
-        progress.setBestScore(valueOrDefault(request.bestScore(), progress.getBestScore()));
-        progress.setAttemptCount(valueOrDefault(request.attemptCount(), progress.getAttemptCount()));
-        progress.setLastPlayedAt(request.lastPlayedAt());
-        progress.setCompletedAt(request.completedAt());
-
-        return toResponse(adventureProgressRepository.save(progress));
-    }
-
-    @Override
-    @Transactional
-    public void deleteAdventureProgress(Long id) {
-        adventureProgressRepository.delete(findAdventureProgress(id));
     }
 
     private ChildVocabularyProgress findVocabularyProgress(Long id) {
@@ -275,11 +220,6 @@ public class ProgressServiceImpl implements ProgressService {
 
     private ChildScenarioProgress findScenarioProgress(Long id) {
         return scenarioProgressRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PROGRESS_NOT_FOUND));
-    }
-
-    private ChildAdventureProgress findAdventureProgress(Long id) {
-        return adventureProgressRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROGRESS_NOT_FOUND));
     }
 
@@ -301,11 +241,6 @@ public class ProgressServiceImpl implements ProgressService {
     private Scenario findScenario(Long id) {
         return scenarioRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCENARIO_NOT_FOUND));
-    }
-
-    private Adventure findAdventure(Long id) {
-        return adventureRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ADVENTURE_NOT_FOUND));
     }
 
     private ChildVocabularyProgressResponse toResponse(ChildVocabularyProgress progress) {
@@ -347,20 +282,6 @@ public class ProgressServiceImpl implements ProgressService {
                 progress.getChild().getId(),
                 progress.getScenario().getId(),
                 progress.getScenario().getTitle(),
-                progress.getStatus(),
-                progress.getAttempts(),
-                progress.getCompletedAt(),
-                progress.getCreatedAt(),
-                progress.getUpdatedAt()
-        );
-    }
-
-    private ChildAdventureProgressResponse toResponse(ChildAdventureProgress progress) {
-        return new ChildAdventureProgressResponse(
-                progress.getId(),
-                progress.getChild().getId(),
-                progress.getAdventure().getId(),
-                progress.getAdventure().getName(),
                 progress.getStatus(),
                 progress.getScore(),
                 progress.getBestScore(),

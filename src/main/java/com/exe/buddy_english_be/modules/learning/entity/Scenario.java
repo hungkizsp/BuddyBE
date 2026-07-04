@@ -14,8 +14,8 @@ import lombok.*;
 public class Scenario extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "adventure_id", nullable = false)
-    private Adventure adventure;
+    @JoinColumn(name = "world_id", nullable = false)
+    private World world;
 
     @Column(name = "title", nullable = false, length = 200)
     private String title;
