@@ -4,6 +4,7 @@ import com.exe.buddy_english_be.modules.notification.dto.NotificationRequest;
 import com.exe.buddy_english_be.modules.notification.dto.NotificationResponse;
 import com.exe.buddy_english_be.modules.notification.entity.Notification;
 import com.exe.buddy_english_be.modules.notification.repository.NotificationRepository;
+import com.exe.buddy_english_be.modules.notification.sse.NotificationSseEmitter;
 import com.exe.buddy_english_be.modules.profile.entity.ChildProfile;
 import com.exe.buddy_english_be.modules.profile.repository.ChildProfileRepository;
 import com.exe.buddy_english_be.shared.exception.BusinessException;
@@ -18,12 +19,15 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final ChildProfileRepository childProfileRepository;
+    private final NotificationSseEmitter notificationSseEmitter;
 
     public NotificationServiceImpl(
             NotificationRepository notificationRepository,
-            ChildProfileRepository childProfileRepository) {
+            ChildProfileRepository childProfileRepository,
+            NotificationSseEmitter notificationSseEmitter) {
         this.notificationRepository = notificationRepository;
         this.childProfileRepository = childProfileRepository;
+        this.notificationSseEmitter = notificationSseEmitter;
     }
 
     // ─── CRUD cơ bản ──────────────────────────────────────────────────────────
@@ -55,7 +59,9 @@ public class NotificationServiceImpl implements NotificationService {
                 .isRead(request.isRead() != null ? request.isRead() : false)
                 .build();
 
-        return toResponse(notificationRepository.save(notification));
+        NotificationResponse response = toResponse(notificationRepository.save(notification));
+        notificationSseEmitter.send(request.childId(), response);
+        return response;
     }
 
     @Override
