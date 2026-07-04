@@ -1,6 +1,6 @@
 package com.exe.buddy_english_be.modules.profile.entity;
 
-import com.exe.buddy_english_be.modules.learning.entity.Adventure;
+import com.exe.buddy_english_be.modules.learning.entity.Scenario;
 import com.exe.buddy_english_be.modules.learning.entity.World;
 import com.exe.buddy_english_be.modules.profile.enums.Gender;
 import com.exe.buddy_english_be.modules.user.entity.User;
@@ -62,8 +62,8 @@ public class ChildProfile extends BaseEntity {
     private World lastWorld;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_adventure_id")
-    private Adventure lastAdventure;
+    @JoinColumn(name = "last_scenario_id")
+    private Scenario lastScenario;
 
     @Column(name = "last_session_at")
     private LocalDateTime lastSessionAt;

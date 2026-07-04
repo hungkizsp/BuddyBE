@@ -2,6 +2,7 @@ package com.exe.buddy_english_be.modules.progress.entity;
 
 import com.exe.buddy_english_be.modules.learning.entity.Scenario;
 import com.exe.buddy_english_be.modules.profile.entity.ChildProfile;
+import com.exe.buddy_english_be.modules.progress.enums.ProgressStatus;
 import com.exe.buddy_english_be.shared.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,12 +28,25 @@ public class ChildScenarioProgress extends BaseEntity {
     @JoinColumn(name = "scenario_id", nullable = false)
     private Scenario scenario;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
-    private String status;
-
-    @Column(name = "attempts")
     @Builder.Default
-    private Integer attempts = 0;
+    private ProgressStatus status = ProgressStatus.LOCKED;
+
+    @Column(name = "score")
+    @Builder.Default
+    private Integer score = 0;
+
+    @Column(name = "best_score")
+    @Builder.Default
+    private Integer bestScore = 0;
+
+    @Column(name = "attempt_count")
+    @Builder.Default
+    private Integer attemptCount = 0;
+
+    @Column(name = "last_played_at")
+    private LocalDateTime lastPlayedAt;
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
