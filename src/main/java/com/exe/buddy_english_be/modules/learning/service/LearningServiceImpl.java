@@ -1,5 +1,10 @@
 package com.exe.buddy_english_be.modules.learning.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.exe.buddy_english_be.modules.learning.dto.ScenarioRequest;
 import com.exe.buddy_english_be.modules.learning.dto.ScenarioResponse;
 import com.exe.buddy_english_be.modules.learning.dto.ScenarioStepRequest;
@@ -20,10 +25,6 @@ import com.exe.buddy_english_be.modules.vocabulary.entity.Vocabulary;
 import com.exe.buddy_english_be.modules.vocabulary.repository.VocabularyRepository;
 import com.exe.buddy_english_be.shared.exception.BusinessException;
 import com.exe.buddy_english_be.shared.exception.ErrorCode;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class LearningServiceImpl implements LearningService {
@@ -358,7 +359,12 @@ public class LearningServiceImpl implements LearningService {
                 scenario.getTitle(),
                 vocabulary.getId(),
                 vocabulary.getWord(),
+                vocabulary.getPhonetic(),
                 vocabulary.getMeaning(),
+                vocabulary.getExampleSentence(),
+                vocabulary.getImageUrl(),
+                vocabulary.getAudioUrl(),
+                vocabulary.getDifficulty(),
                 scenarioVocabulary.getCreatedAt(),
                 scenarioVocabulary.getUpdatedAt()
         );
