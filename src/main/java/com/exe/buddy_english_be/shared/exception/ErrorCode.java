@@ -20,6 +20,9 @@ public enum ErrorCode {
     ACHIEVEMENT_NOT_FOUND("Achievement not found", HttpStatus.NOT_FOUND),
     CHILD_ACHIEVEMENT_NOT_FOUND("Child achievement not found", HttpStatus.NOT_FOUND),
     NOTIFICATION_NOT_FOUND("Notification not found", HttpStatus.NOT_FOUND),
+    LEARNING_SESSION_NOT_FOUND("Learning session not found", HttpStatus.NOT_FOUND),
+    WEEKLY_REPORT_NOT_FOUND("Weekly report not found", HttpStatus.NOT_FOUND),
+    FEEDBACK_NOT_FOUND("Feedback not found", HttpStatus.NOT_FOUND),
     EMAIL_ALREADY_EXISTS("Email is already registered", HttpStatus.CONFLICT),
     USERNAME_ALREADY_EXISTS("Username is already taken", HttpStatus.CONFLICT),
     INTERNAL_SERVER_ERROR("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
