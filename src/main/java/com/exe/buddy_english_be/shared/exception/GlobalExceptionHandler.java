@@ -15,39 +15,41 @@ import com.exe.buddy_english_be.shared.response.ApiResponse;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException exception) {
-        ErrorCode errorCode = exception.getErrorCode();
-        return ResponseEntity
-                .status(errorCode.getStatus())
-                .body(ApiResponse.error(errorCode.getMessage(), null));
-    }
+        @ExceptionHandler(BusinessException.class)
+        public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException exception) {
+                ErrorCode errorCode = exception.getErrorCode();
+                return ResponseEntity
+                                .status(errorCode.getStatus())
+                                .body(ApiResponse.error(errorCode.getMessage(), null));
+        }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationException(
-            MethodArgumentNotValidException exception
-    ) {
-        Map<String, String> errors = new LinkedHashMap<>();
-        exception.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage())
-        );
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationException(
+                        MethodArgumentNotValidException exception) {
+                Map<String, String> errors = new LinkedHashMap<>();
+                exception.getBindingResult().getFieldErrors()
+                                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
-        return ResponseEntity
-                .badRequest()
-                .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.getMessage(), errors));
-    }
+                return ResponseEntity
+                                .badRequest()
+                                .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR.getMessage(), errors));
+        }
 
-    @ExceptionHandler({AuthenticationException.class, AccessDeniedException.class})
-    public ResponseEntity<ApiResponse<Void>> handleUnauthorizedException(Exception exception) {
-        return ResponseEntity
-                .status(ErrorCode.UNAUTHORIZED.getStatus())
-                .body(ApiResponse.error(ErrorCode.UNAUTHORIZED.getMessage(), null));
-    }
+        @ExceptionHandler({ AuthenticationException.class, AccessDeniedException.class })
+        public ResponseEntity<ApiResponse<Void>> handleUnauthorizedException(Exception exception) {
+                return ResponseEntity
+                                .status(ErrorCode.UNAUTHORIZED.getStatus())
+                                .body(ApiResponse.error(ErrorCode.UNAUTHORIZED.getMessage(), null));
+        }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleUnexpectedException(Exception exception) {
-        return ResponseEntity
-                .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-                .body(ApiResponse.error(ErrorCode.INTERNAL_SERVER_ERROR.getMessage(), null));
-    }
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<ApiResponse<Void>> handleUnexpectedException(Exception exception) {
+                exception.printStackTrace();
+
+                return ResponseEntity
+                                .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
+                                .body(ApiResponse.error(
+                                                ErrorCode.INTERNAL_SERVER_ERROR.getMessage(),
+                                                null));
+        }
 }
