@@ -387,7 +387,8 @@ public class FoodForestSeeder {
                                                                 "Let's buy some vegetables first! Please collect broccoli, cucumber, potato, and onion.")
                                                 .expectedIntent("COLLECT_CATEGORY")
                                                 .expectedEntity("VEGETABLES")
-                                                .successResponse("Awesome! We have all the vegetables.")
+                                                .successResponse(
+                                                                "Awesome! We have all the vegetables.Now we neeed some snack and dairy")
                                                 .failResponse("We still need broccoli, cucumber, potato, and onion.")
                                                 .build(),
 
@@ -400,8 +401,9 @@ public class FoodForestSeeder {
                                                                 "Great! Now let's get some dairy and snacks. We need cheese, yogurt and butter.")
                                                 .expectedIntent("COLLECT_CATEGORY")
                                                 .expectedEntity("SNACK_DAIRY")
-                                                .successResponse("Perfect! Everything from the fridge is ready.")
-                                                .failResponse("Check the fridge again.")
+                                                .successResponse(
+                                                                "Perfect! Everything from the fridge is ready. Next, we need to buy meats but I don't know where its at. Can you ask the staff for me?")
+                                                .failResponse("Check the fridge again and follow the checklist.")
                                                 .build(),
 
                                 // Step 3
