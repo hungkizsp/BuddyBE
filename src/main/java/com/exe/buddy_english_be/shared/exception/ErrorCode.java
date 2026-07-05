@@ -16,6 +16,8 @@ public enum ErrorCode {
     CHILD_PROFILE_NOT_FOUND("Child profile not found", HttpStatus.NOT_FOUND),
     WORLD_NOT_FOUND("World not found", HttpStatus.NOT_FOUND),
     SCENARIO_NOT_FOUND("Scenario not found", HttpStatus.NOT_FOUND),
+    SCENARIO_STEP_NOT_FOUND("Scenario step not found", HttpStatus.NOT_FOUND),
+    SCENARIO_VOCABULARY_NOT_FOUND("Scenario vocabulary not found", HttpStatus.NOT_FOUND),
     PROGRESS_NOT_FOUND("Progress not found", HttpStatus.NOT_FOUND),
     ACHIEVEMENT_NOT_FOUND("Achievement not found", HttpStatus.NOT_FOUND),
     CHILD_ACHIEVEMENT_NOT_FOUND("Child achievement not found", HttpStatus.NOT_FOUND),
