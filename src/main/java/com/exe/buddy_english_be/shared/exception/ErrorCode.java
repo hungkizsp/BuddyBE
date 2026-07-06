@@ -27,6 +27,12 @@ public enum ErrorCode {
     FEEDBACK_NOT_FOUND("Feedback not found", HttpStatus.NOT_FOUND),
     EMAIL_ALREADY_EXISTS("Email is already registered", HttpStatus.CONFLICT),
     USERNAME_ALREADY_EXISTS("Username is already taken", HttpStatus.CONFLICT),
+    REWARD_NOT_FOUND("Reward not found", HttpStatus.NOT_FOUND),
+    CHILD_REWARD_NOT_FOUND("Child reward not found", HttpStatus.NOT_FOUND),
+    BUDDY_PROFILE_NOT_FOUND("Buddy profile not found", HttpStatus.NOT_FOUND),
+    BUDDY_CUSTOMIZATION_NOT_FOUND("Buddy customization not found", HttpStatus.NOT_FOUND),
+    CHILD_CUSTOMIZATION_NOT_FOUND("Child customization not found", HttpStatus.NOT_FOUND),
+    CHILD_MEMORY_NOT_FOUND("Child memory not found", HttpStatus.NOT_FOUND),
     INTERNAL_SERVER_ERROR("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String message;
