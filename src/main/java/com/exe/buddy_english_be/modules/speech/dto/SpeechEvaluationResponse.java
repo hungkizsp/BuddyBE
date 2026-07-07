@@ -12,6 +12,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SpeechEvaluationResponse {
+    // private boolean matched;
+    // private String transcript;
+    // private String expectedIntent;
+    // private String detectedIntent;
+    // private String expectedEntity;
+    // private String detectedEntity;
+    // private String feedback;
+
     private String overallFeedback;
     private List<String> strengths;
     private List<String> weaknesses;

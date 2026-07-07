@@ -9,6 +9,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.exe.buddy_english_be.shared.exception.GeminiQuotaExceededException;
+import com.exe.buddy_english_be.shared.exception.GeminiUnavailableException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -36,16 +38,22 @@ public class GeminiService {
         this.httpClient = HttpClient.newBuilder().build();
     }
 
+    /**
+     * Calls the Gemini API and returns only valid text on success.
+     *
+     * @throws GeminiQuotaExceededException if the API returns HTTP 429 or RESOURCE_EXHAUSTED.
+     * @throws GeminiUnavailableException   if the API key is missing, the API returns HTTP 5xx,
+     *                                      a network/timeout error occurs, or no content is returned.
+     */
     public String generateResponse(String systemInstruction, String userPrompt) {
         if (apiKey == null || apiKey.trim().isEmpty()) {
-            return "WARNING_NO_API_KEY";
+            throw new GeminiUnavailableException("Gemini API key is not configured.");
         }
 
         try {
-            String baseUrl = apiUrl;
-            if (baseUrl.endsWith("/")) {
-                baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-            }
+            String baseUrl = apiUrl.endsWith("/")
+                    ? apiUrl.substring(0, apiUrl.length() - 1)
+                    : apiUrl;
             String url = baseUrl + "/v1beta/models/" + model + ":generateContent?key=" + apiKey;
 
             GeminiRequest requestBody = new GeminiRequest(
@@ -61,25 +69,56 @@ public class GeminiService {
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            log.info("Ai call status: {}, body: {}", response.statusCode(), response.body());
-            if (response.statusCode() != 200) {
-                System.err.println("Gemini API error. Status: " + response.statusCode() + ", Body: " + response.body());
-                return "ERROR_API_FAILED: Status " + response.statusCode();
+            int statusCode = response.statusCode();
+            log.info("Gemini API call status: {}", statusCode);
+
+            if (statusCode == 429) {
+                log.warn("Gemini quota exceeded (HTTP 429). Body: {}", response.body());
+                throw new GeminiQuotaExceededException(
+                        "Gemini API quota exceeded (HTTP 429). Please try again later.");
+            }
+
+            if (statusCode >= 500) {
+                log.error("Gemini API server error (HTTP {}). Body: {}", statusCode, response.body());
+                throw new GeminiUnavailableException(
+                        "Gemini API is unavailable (HTTP " + statusCode + ").");
+            }
+
+            if (statusCode != 200) {
+                log.error("Gemini API unexpected status (HTTP {}). Body: {}", statusCode, response.body());
+                throw new GeminiUnavailableException(
+                        "Gemini API returned an unexpected status code: " + statusCode);
             }
 
             GeminiResponse geminiResponse = objectMapper.readValue(response.body(), GeminiResponse.class);
+
+            // Check for RESOURCE_EXHAUSTED in error response body
+            if (response.body().contains("RESOURCE_EXHAUSTED")) {
+                log.warn("Gemini quota exceeded (RESOURCE_EXHAUSTED in response body).");
+                throw new GeminiQuotaExceededException(
+                        "Gemini API quota exceeded (RESOURCE_EXHAUSTED).");
+            }
+
             if (geminiResponse.candidates() != null && !geminiResponse.candidates().isEmpty()) {
                 GeminiResponse.Candidate candidate = geminiResponse.candidates().get(0);
                 if (candidate.content() != null && candidate.content().parts() != null
                         && !candidate.content().parts().isEmpty()) {
-                    return candidate.content().parts().get(0).text();
+                    String text = candidate.content().parts().get(0).text();
+                    if (text != null && !text.isBlank()) {
+                        return text;
+                    }
                 }
             }
 
-            return "ERROR_NO_CONTENT";
+            log.warn("Gemini API returned a 200 response but with no usable content.");
+            throw new GeminiUnavailableException("Gemini API returned no content in its response.");
+
+        } catch (GeminiQuotaExceededException | GeminiUnavailableException e) {
+            throw e;
         } catch (Exception e) {
-            System.err.println("Error calling Gemini API: " + e.getMessage());
-            return "ERROR_EXCEPTION: " + e.getMessage();
+            log.error("Network or unexpected error while calling Gemini API: {}", e.getMessage(), e);
+            throw new GeminiUnavailableException(
+                    "Failed to reach Gemini API due to a network or unexpected error.", e);
         }
     }
 
