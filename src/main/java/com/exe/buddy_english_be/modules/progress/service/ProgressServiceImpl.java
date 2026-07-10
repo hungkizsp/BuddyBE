@@ -18,6 +18,8 @@ import com.exe.buddy_english_be.modules.progress.dto.ChildVocabularyProgressRequ
 import com.exe.buddy_english_be.modules.progress.dto.ChildVocabularyProgressResponse;
 import com.exe.buddy_english_be.modules.progress.dto.ChildWorldProgressRequest;
 import com.exe.buddy_english_be.modules.progress.dto.ChildWorldProgressResponse;
+import com.exe.buddy_english_be.modules.progress.dto.CompleteScenarioRequest;
+import com.exe.buddy_english_be.modules.progress.dto.CompleteScenarioResponse;
 import com.exe.buddy_english_be.modules.progress.entity.ChildScenarioProgress;
 import com.exe.buddy_english_be.modules.progress.entity.ChildVocabularyProgress;
 import com.exe.buddy_english_be.modules.progress.entity.ChildWorldProgress;
@@ -142,7 +144,8 @@ public class ProgressServiceImpl implements ProgressService {
         progress.setChild(findChild(request.childId()));
         progress.setWorld(findWorld(request.worldId()));
         progress.setStatus(valueOrDefault(request.status(), progress.getStatus()));
-        progress.setCompletionPercentage(valueOrDefault(request.completionPercentage(), progress.getCompletionPercentage()));
+        progress.setCompletionPercentage(
+                valueOrDefault(request.completionPercentage(), progress.getCompletionPercentage()));
         progress.setLastPlayedAt(request.lastPlayedAt());
         progress.setUnlockedAt(request.unlockedAt());
 
@@ -257,8 +260,7 @@ public class ProgressServiceImpl implements ProgressService {
                 progress.getNextReviewAt(),
                 progress.getLastPracticed(),
                 progress.getCreatedAt(),
-                progress.getUpdatedAt()
-        );
+                progress.getUpdatedAt());
     }
 
     private ChildWorldProgressResponse toResponse(ChildWorldProgress progress) {
@@ -272,8 +274,7 @@ public class ProgressServiceImpl implements ProgressService {
                 progress.getLastPlayedAt(),
                 progress.getUnlockedAt(),
                 progress.getCreatedAt(),
-                progress.getUpdatedAt()
-        );
+                progress.getUpdatedAt());
     }
 
     private ChildScenarioProgressResponse toResponse(ChildScenarioProgress progress) {
@@ -289,8 +290,7 @@ public class ProgressServiceImpl implements ProgressService {
                 progress.getLastPlayedAt(),
                 progress.getCompletedAt(),
                 progress.getCreatedAt(),
-                progress.getUpdatedAt()
-        );
+                progress.getUpdatedAt());
     }
 
     private <T> T valueOrDefault(T value, T defaultValue) {
@@ -302,5 +302,112 @@ public class ProgressServiceImpl implements ProgressService {
             return null;
         }
         return value.trim();
+    }
+
+    // ─── Complete Scenario (atomic upsert of scenario + vocab + world progress)
+    // ─────
+
+    @Override
+    @Transactional
+    public CompleteScenarioResponse completeScenario(CompleteScenarioRequest request) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // ── 1. Upsert ChildScenarioProgress ──────────────────────────────────────────
+        ChildProfile child = findChild(request.childId());
+        Scenario scenario = findScenario(request.scenarioId());
+
+        ChildScenarioProgress scenarioProgress = scenarioProgressRepository
+                .findByChildIdAndScenarioId(request.childId(), request.scenarioId())
+                .orElseGet(() -> ChildScenarioProgress.builder()
+                        .child(child)
+                        .scenario(scenario)
+                        .build());
+
+        boolean alreadyCompleted = scenarioProgress.getStatus() == ProgressStatus.COMPLETED;
+
+        int newScore = request.score() != null ? request.score() : 0;
+        int currentBest = scenarioProgress.getBestScore() != null ? scenarioProgress.getBestScore() : 0;
+
+        scenarioProgress.setStatus(ProgressStatus.COMPLETED);
+        scenarioProgress.setScore(newScore);
+        scenarioProgress.setBestScore(Math.max(currentBest, newScore));
+        scenarioProgress.setAttemptCount(
+                (scenarioProgress.getAttemptCount() != null ? scenarioProgress.getAttemptCount() : 0) + 1);
+        scenarioProgress.setLastPlayedAt(now);
+        if (!alreadyCompleted) {
+            scenarioProgress.setCompletedAt(now);
+        }
+
+        ChildScenarioProgress savedScenario = scenarioProgressRepository.save(scenarioProgress);
+
+        // ── 2. Upsert ChildVocabularyProgress for each encountered vocabulary ────────
+        if (request.vocabularyIds() != null && !request.vocabularyIds().isEmpty()) {
+            for (Long vocabId : request.vocabularyIds()) {
+                try {
+                    Vocabulary vocabulary = findVocabulary(vocabId);
+                    ChildVocabularyProgress vocabProgress = vocabularyProgressRepository
+                            .findByChildIdAndVocabularyId(request.childId(), vocabId)
+                            .orElseGet(() -> ChildVocabularyProgress.builder()
+                                    .child(child)
+                                    .vocabulary(vocabulary)
+                                    .firstLearnedAt(now)
+                                    .build());
+
+                    int correct = vocabProgress.getCorrectCount() != null ? vocabProgress.getCorrectCount() : 0;
+                    vocabProgress.setCorrectCount(correct + 1);
+                    vocabProgress.setLastPracticed(now);
+
+                    // Simple spaced-repetition: interval doubles each correct answer (1→2→4→8→16→30
+                    // days)
+                    int intervalDays = Math.min(30, (int) Math.pow(2, correct));
+                    vocabProgress.setNextReviewAt(now.plusDays(intervalDays));
+
+                    // Mastery: bump every 3 correct answers, max 5
+                    int masteryLevel = vocabProgress.getMasteryLevel() != null ? vocabProgress.getMasteryLevel() : 1;
+                    if ((correct + 1) % 3 == 0 && masteryLevel < 5) {
+                        vocabProgress.setMasteryLevel(masteryLevel + 1);
+                    }
+
+                    // Confidence score: ratio of correct vs total attempts (no wrong data here —
+                    // approximate)
+                    vocabProgress.setConfidenceScore(Math.min(1.0, (correct + 1) / 5.0));
+
+                    vocabularyProgressRepository.save(vocabProgress);
+                } catch (Exception e) {
+                    // Skip unknown vocabulary IDs gracefully — don't fail the whole transaction
+                }
+            }
+        }
+
+        // ── 3. Recalculate ChildWorldProgress ────────────────────────────────────────
+        World world = scenario.getWorld();
+        long totalScenarios = scenarioRepository.countByWorldId(world.getId());
+        long completedScenarios = scenarioProgressRepository
+                .countByChildIdAndScenario_WorldIdAndStatus(request.childId(), world.getId(), ProgressStatus.COMPLETED);
+
+        int completionPercentage = totalScenarios > 0
+                ? (int) Math.round((completedScenarios * 100.0) / totalScenarios)
+                : 0;
+
+        ChildWorldProgress worldProgress = worldProgressRepository
+                .findByChildIdAndWorldId(request.childId(), world.getId())
+                .orElseGet(() -> ChildWorldProgress.builder()
+                        .child(child)
+                        .world(world)
+                        .unlockedAt(now)
+                        .build());
+
+        worldProgress.setCompletionPercentage(completionPercentage);
+        worldProgress.setLastPlayedAt(now);
+        worldProgress.setStatus(completionPercentage >= 100
+                ? ProgressStatus.COMPLETED
+                : ProgressStatus.IN_PROGRESS);
+
+        ChildWorldProgress savedWorld = worldProgressRepository.save(worldProgress);
+
+        return new CompleteScenarioResponse(
+                alreadyCompleted,
+                toResponse(savedScenario),
+                toResponse(savedWorld));
     }
 }

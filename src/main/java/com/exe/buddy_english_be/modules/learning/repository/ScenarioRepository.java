@@ -10,4 +10,6 @@ import java.util.List;
 public interface ScenarioRepository extends JpaRepository<Scenario, Long> {
 
     List<Scenario> findByWorldIdOrderByOrderIndexAsc(Long worldId);
+
+    long countByWorldId(Long worldId);
 }

@@ -144,4 +144,13 @@ public class ProgressController {
         return ResponseEntity.ok(ApiResponse.success("Scenario progress deleted successfully", null));
     }
 
+    // Complete Scenario (atomic — updates scenario + vocabulary + world progress)
+
+    @PostMapping("/scenarios/complete")
+    public ResponseEntity<ApiResponse<CompleteScenarioResponse>> completeScenario(
+            @Valid @RequestBody CompleteScenarioRequest request) {
+        CompleteScenarioResponse response = progressService.completeScenario(request);
+        return ResponseEntity.ok(ApiResponse.success("Scenario completed successfully", response));
+    }
+
 }

@@ -1,10 +1,11 @@
 package com.exe.buddy_english_be.modules.profile.dto;
 
+import java.time.LocalDate;
+
 import com.exe.buddy_english_be.modules.profile.enums.Gender;
+
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
-
-import java.time.LocalDate;
 
 @Builder
 public record UpdateChildProfileRequest(
@@ -16,5 +17,9 @@ public record UpdateChildProfileRequest(
 
         LocalDate birthDate,
 
-        Gender gender
+        Gender gender,
+
+        Integer xp,
+
+        Integer coins
 ) {}
