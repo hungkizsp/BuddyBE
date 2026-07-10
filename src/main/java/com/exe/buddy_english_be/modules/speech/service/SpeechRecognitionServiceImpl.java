@@ -32,25 +32,30 @@ public class SpeechRecognitionServiceImpl implements SpeechRecognitionService {
     // -------------------------------------------------------------------------
 
     private static final String SYSTEM_PROMPT = """
-You are a precise intent and entity extractor for a child-friendly English learning game.
+            You are a precise intent and entity extractor for a child-friendly English learning game.
 
-Your job is to understand the player's spoken request and classify it into:
-- intent: the main action the player is trying to perform
-- entity: the item or food the player is referring to
+            Your job is to understand the player's spoken request and classify it into:
+            - intent: the main action the player is trying to perform
+            - entity: the item or food the player is referring to
 
-Rules:
-- Understand natural English, including polite phrases, contractions, and simple variations.
-- Do not force the expected entity. Infer the entity from what the player actually said.
-- Return valid JSON only with this schema:
-{
-  "intent": "ORDER_FOOD",
-  "entity": "GRILLED_CHICKEN"
-}
-- Use uppercase letters with underscores for both values.
-- If the player is ordering food, use "ORDER_FOOD".
-- If the player is asking for an item, use the normalized entity name such as "BEEF_STEAK" or "GRILLED_CHICKEN".
-- Keep the response concise and valid JSON. Do not add markdown or explanation.
-""";
+            Rules:
+            - Understand natural English, including polite phrases, contractions, and simple variations.
+            - Do not force the expected entity. Infer the entity from what the player actually said.
+            - Return valid JSON only with this schema:
+            {
+              "intent": "ORDER_FOOD",
+              "entity": "GRILLED_CHICKEN"
+            }
+            - Use uppercase letters with underscores for both values.
+            - If the player is ordering food, use "ORDER_FOOD".
+            - If the player orders a drink, use "ORDER_DRINK".
+            - If the player is asking for an item, use the normalized entity name such as "BEEF_STEAK" or "GRILLED_CHICKEN".
+            For drinks return entities such as:
+            - MILKSHAKE
+            - ORANGE_JUICE
+            - APPLE_JUICE
+            - Keep the response concise and valid JSON. Do not add markdown or explanation.
+            """;
 
     private static final String INTENT_ORDER_FOOD = "ORDER_FOOD";
 
@@ -61,79 +66,82 @@ Rules:
     private static final Set<String> IGNORED_WORDS = Set.of(
             "can", "could", "may", "please", "i", "me", "my",
             "have", "want", "like", "order", "get", "id", "a", "an", "the",
-            "some", "would", "d", "ll", "s", "to", "for"
-    );
-
+            "some", "would", "d", "ll", "s", "to", "for");
+    private static final Set<String> DRINK_KEYWORDS = Set.of(
+            "juice",
+            "milk",
+            "milkshake",
+            "milk shake",
+            "drink",
+            "water");
     /**
-     * Maps one or more transcript keywords → canonical entity value (UPPER_SNAKE_CASE).
+     * Maps one or more transcript keywords → canonical entity value
+     * (UPPER_SNAKE_CASE).
      *
-     * <p>Each entry's key is a keyword that appears in the normalised transcript.
+     * <p>
+     * Each entry's key is a keyword that appears in the normalised transcript.
      * Multiple keywords can map to the same entity; the first match wins.
      * Add new food names here — no code changes are needed elsewhere.
      */
     private static final Map<String, String> KEYWORD_TO_ENTITY = Map.ofEntries(
             // Grilled chicken
-            Map.entry("grilled_chicken",  "GRILLED_CHICKEN"),
-            Map.entry("grilled chicken",  "GRILLED_CHICKEN"),
-            Map.entry("grilled",          "GRILLED_CHICKEN"),
+            Map.entry("grilled_chicken", "GRILLED_CHICKEN"),
+            Map.entry("grilled chicken", "GRILLED_CHICKEN"),
+            Map.entry("grilled", "GRILLED_CHICKEN"),
             // Beef steak
-            Map.entry("beef_steak",       "BEEF_STEAK"),
-            Map.entry("beef steak",       "BEEF_STEAK"),
-            Map.entry("steak",            "BEEF_STEAK"),
-            Map.entry("beef",             "BEEF_STEAK"),
+            Map.entry("beef_steak", "BEEF_STEAK"),
+            Map.entry("beef steak", "BEEF_STEAK"),
+            Map.entry("steak", "BEEF_STEAK"),
+            Map.entry("beef", "BEEF_STEAK"),
+
+            Map.entry("pork chop", "PORK_CHOP"),
+            Map.entry("pork_chop", "PORK_CHOP"),
+            Map.entry("pork", "PORK_CHOP"),
+            Map.entry("chop", "PORK_CHOP"),
+
             // Garlic bread
-            Map.entry("garlic_bread",     "GARLIC_BREAD"),
-            Map.entry("garlic bread",     "GARLIC_BREAD"),
-            Map.entry("garlic",           "GARLIC_BREAD"),
-            Map.entry("bread",            "GARLIC_BREAD"),
-            // Pasta
-            Map.entry("pasta",            "PASTA"),
-            Map.entry("spaghetti",        "PASTA"),
-            // Salad
-            Map.entry("salad",            "SALAD"),
-            // Soup
-            Map.entry("soup",             "SOUP"),
-            // Pizza
-            Map.entry("pizza",            "PIZZA"),
-            // Burger
-            Map.entry("burger",           "BURGER"),
-            Map.entry("hamburger",        "BURGER"),
-            // Sandwich
-            Map.entry("sandwich",         "SANDWICH"),
-            // Fried rice
-            Map.entry("fried_rice",       "FRIED_RICE"),
-            Map.entry("fried rice",       "FRIED_RICE"),
-            // Noodles
-            Map.entry("noodle",           "NOODLES"),
-            Map.entry("noodles",          "NOODLES"),
-            // Fries / French fries
-            Map.entry("fries",            "FRENCH_FRIES"),
-            Map.entry("french fries",     "FRENCH_FRIES"),
-            Map.entry("french_fries",     "FRENCH_FRIES"),
-            // Cake
-            Map.entry("cake",             "CAKE"),
-            // Ice cream
-            Map.entry("ice cream",        "ICE_CREAM"),
-            Map.entry("ice_cream",        "ICE_CREAM"),
-            Map.entry("icecream",         "ICE_CREAM"),
-            // Juice
-            Map.entry("juice",            "JUICE"),
-            // Water
-            Map.entry("water",            "WATER"),
-            // Milk
-            Map.entry("milk",             "MILK"),
-            // Cookies / biscuits
-            Map.entry("cookie",           "COOKIES"),
-            Map.entry("cookies",          "COOKIES"),
-            Map.entry("biscuit",          "COOKIES"),
-            Map.entry("biscuits",         "COOKIES"),
-            // Donut
-            Map.entry("donut",            "DONUT"),
-            Map.entry("doughnut",         "DONUT"),
-            // Hotdog
-            Map.entry("hotdog",           "HOTDOG"),
-            Map.entry("hot dog",          "HOTDOG")
-    );
+            Map.entry("garlic_bread", "GARLIC_BREAD"),
+            Map.entry("garlic bread", "GARLIC_BREAD"),
+            Map.entry("garlic", "GARLIC_BREAD"),
+            Map.entry("bread", "GARLIC_BREAD"),
+            Map.entry("mashed potatoes", "MASHED_POTATOES"),
+            Map.entry("mashed potato", "MASHED_POTATOES"),
+            Map.entry("mashed_potatoes", "MASHED_POTATOES"),
+            Map.entry("potatoes", "MASHED_POTATOES"),
+            Map.entry("potato", "MASHED_POTATOES"),
+
+            Map.entry("broccoli soup", "BROCCOLI_SOUP"),
+            Map.entry("broccoli_soup", "BROCCOLI_SOUP"),
+            Map.entry("broccoli", "BROCCOLI_SOUP"),
+
+            Map.entry("apple pie", "APPLE_PIE"),
+            Map.entry("apple_pie", "APPLE_PIE"),
+            Map.entry("apple", "APPLE_PIE"),
+            Map.entry("pie", "APPLE_PIE"),
+
+            // Cheesecake
+            Map.entry("cheesecake", "CHEESECAKE"),
+            Map.entry("cheese cake", "CHEESECAKE"),
+
+            // Chocolate Cake
+            Map.entry("chocolate cake", "CHOCOLATE_CAKE"),
+            Map.entry("chocolate_cake", "CHOCOLATE_CAKE"),
+            Map.entry("chocolate", "CHOCOLATE_CAKE"),
+            // Milkshake
+            Map.entry("milkshake", "MILKSHAKE"),
+            Map.entry("milk shake", "MILKSHAKE"),
+            Map.entry("milk", "MILKSHAKE"),
+
+            // Orange Juice
+            Map.entry("orange juice", "ORANGE_JUICE"),
+            Map.entry("orange_juice", "ORANGE_JUICE"),
+            Map.entry("orange", "ORANGE_JUICE"),
+
+            // Apple Juice
+            Map.entry("apple juice", "APPLE_JUICE"),
+            Map.entry("apple_juice", "APPLE_JUICE"),
+
+            Map.entry("hot dog", "HOTDOG"));
 
     // -------------------------------------------------------------------------
     // Dependencies
@@ -178,9 +186,12 @@ Rules:
             return buildRecognitionResult(request, expectedIntent, expectedEntity, detectedIntent, detectedEntity);
 
         } catch (GeminiQuotaExceededException e) {
-            log.warn("Gemini quota exceeded during speech recognition for userId: {}. Switching to rule-based fallback.", userId, e);
+            log.warn(
+                    "Gemini quota exceeded during speech recognition for userId: {}. Switching to rule-based fallback.",
+                    userId, e);
         } catch (GeminiUnavailableException e) {
-            log.warn("Gemini unavailable during speech recognition for userId: {}. Switching to rule-based fallback.", userId, e);
+            log.warn("Gemini unavailable during speech recognition for userId: {}. Switching to rule-based fallback.",
+                    userId, e);
         }
 
         // --- Fallback path: rule-based manual recognition ---
@@ -193,7 +204,8 @@ Rules:
 
     /**
      * Detects intent and entity from the raw transcript using keyword matching.
-     * Intent is always {@code ORDER_FOOD}; entity is looked up via {@link #KEYWORD_TO_ENTITY}.
+     * Intent is always {@code ORDER_FOOD}; entity is looked up via
+     * {@link #KEYWORD_TO_ENTITY}.
      */
     private SpeechRecognitionResponse manualRecognize(
             SpeechRecognitionRequest request,
@@ -205,12 +217,20 @@ Rules:
         log.info("Rule-based fallback recognition for userId: {}, transcript: \"{}\"", userId, transcript);
 
         // Step 1 – normalise: lowercase + remove punctuation + collapse whitespace
-        String normalised = transcript == null ? "" : transcript
-                .toLowerCase(Locale.ROOT)
-                .replaceAll("[^a-z0-9 ]", " ")
-                .replaceAll("\\s+", " ")
-                .trim();
+        String normalised = transcript == null ? ""
+                : transcript
+                        .toLowerCase(Locale.ROOT)
+                        .replaceAll("[^a-z0-9 ]", " ")
+                        .replaceAll("\\s+", " ")
+                        .trim();
+        String detectedIntent = INTENT_ORDER_FOOD;
 
+        for (String keyword : DRINK_KEYWORDS) {
+            if (normalised.contains(keyword)) {
+                detectedIntent = "ORDER_DRINK";
+                break;
+            }
+        }
         // Step 2 – detect food entity via multi-word → single-word keyword lookup
         // Multi-word phrases must be checked before their individual constituents.
         String detectedEntity = null;
@@ -221,7 +241,8 @@ Rules:
             }
         }
 
-        // Step 3 – if nothing matched yet, try token-by-token after ignoring filler words
+        // Step 3 – if nothing matched yet, try token-by-token after ignoring filler
+        // words
         if (detectedEntity == null) {
             String[] tokens = normalised.split(" ");
             for (String token : tokens) {
@@ -242,7 +263,7 @@ Rules:
                     .matched(false)
                     .transcript(transcript)
                     .expectedIntent(expectedIntent)
-                    .detectedIntent(INTENT_ORDER_FOOD)
+                    .detectedIntent(detectedIntent)
                     .expectedEntity(expectedEntity)
                     .detectedEntity("")
                     .feedback("I couldn't understand which food you ordered.")
@@ -250,7 +271,7 @@ Rules:
         }
 
         log.info("Rule-based fallback detected entity: {}", detectedEntity);
-        return buildRecognitionResult(request, expectedIntent, expectedEntity, INTENT_ORDER_FOOD, detectedEntity);
+        return buildRecognitionResult(request, expectedIntent, expectedEntity, detectedIntent, detectedEntity);
     }
 
     // -------------------------------------------------------------------------
@@ -341,15 +362,15 @@ Rules:
         return String.format(
                 Locale.ROOT,
                 """
-Expected intent:
-%s
+                        Expected intent:
+                        %s
 
-Expected entity:
-%s
+                        Expected entity:
+                        %s
 
-User transcript:
-%s
-""",
+                        User transcript:
+                        %s
+                        """,
                 expectedIntent,
                 expectedEntity,
                 request.getTranscript());
@@ -377,10 +398,14 @@ User transcript:
         }
 
         if (!expectedIntent.equals(detectedIntent)) {
+            if ("ORDER_DRINK".equals(expectedIntent)) {
+                return "Buddy asked you to order a drink.";
+            }
             return "Buddy asked you to order food.";
         }
 
-        return "You ordered " + formatEntity(detectedEntity) + ", but Buddy wanted " + formatEntity(expectedEntity) + ".";
+        return "You ordered " + formatEntity(detectedEntity) + ", but Buddy wanted " + formatEntity(expectedEntity)
+                + ".";
     }
 
     private String formatEntity(String entity) {
@@ -407,7 +432,9 @@ User transcript:
     // Internal records
     // -------------------------------------------------------------------------
 
-    private record ParsedRecognition(String intent, String entity) {}
+    private record ParsedRecognition(String intent, String entity) {
+    }
 
-    private record GeminiRecognitionResult(String intent, String entity) {}
+    private record GeminiRecognitionResult(String intent, String entity) {
+    }
 }

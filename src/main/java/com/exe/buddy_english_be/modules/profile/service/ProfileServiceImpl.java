@@ -52,6 +52,8 @@ public class ProfileServiceImpl implements ProfileService {
         if (request.avatarUrl() != null) child.setAvatarUrl(request.avatarUrl());
         if (request.birthDate() != null) child.setBirthDate(request.birthDate());
         if (request.gender() != null) child.setGender(request.gender());
+        if (request.xp() != null) child.setXp(request.xp());
+        if (request.coins() != null) child.setCoins(request.coins());
 
         childProfileRepository.save(child);
         return mapToChildResponse(child);
