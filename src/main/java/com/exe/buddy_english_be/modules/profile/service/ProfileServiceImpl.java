@@ -54,6 +54,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (request.gender() != null) child.setGender(request.gender());
         if (request.xp() != null) child.setXp(request.xp());
         if (request.coins() != null) child.setCoins(request.coins());
+        if (request.activeCustomCharacterUrl() != null) child.setActiveCustomCharacterUrl(request.activeCustomCharacterUrl());
 
         childProfileRepository.save(child);
         return mapToChildResponse(child);
@@ -123,6 +124,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .streakDays(child.getStreakDays())
                 .lastLoginDate(child.getLastLoginDate())
                 .lastSessionAt(child.getLastSessionAt())
+                .activeCustomCharacterUrl(child.getActiveCustomCharacterUrl())
                 .build();
     }
 

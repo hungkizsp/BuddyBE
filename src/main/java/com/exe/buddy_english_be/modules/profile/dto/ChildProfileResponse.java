@@ -19,5 +19,6 @@ public record ChildProfileResponse(
         Integer coins,
         Integer streakDays,
         LocalDate lastLoginDate,
-        LocalDateTime lastSessionAt
+        LocalDateTime lastSessionAt,
+        String activeCustomCharacterUrl
 ) {}

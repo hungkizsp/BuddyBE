@@ -67,4 +67,7 @@ public class ChildProfile extends BaseEntity {
 
     @Column(name = "last_session_at")
     private LocalDateTime lastSessionAt;
+
+    @Column(name = "active_custom_character_url", length = 500)
+    private String activeCustomCharacterUrl;
 }

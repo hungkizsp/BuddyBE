@@ -1,9 +1,7 @@
 package com.exe.buddy_english_be.modules.profile.dto;
 
 import java.time.LocalDate;
-
 import com.exe.buddy_english_be.modules.profile.enums.Gender;
-
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
@@ -21,5 +19,7 @@ public record UpdateChildProfileRequest(
 
         Integer xp,
 
-        Integer coins
+        Integer coins,
+
+        String activeCustomCharacterUrl
 ) {}
