@@ -1,11 +1,24 @@
 package com.exe.buddy_english_be.modules.conversation.entity;
 
+import java.time.LocalDateTime;
+
 import com.exe.buddy_english_be.modules.conversation.enums.ContextType;
 import com.exe.buddy_english_be.shared.entity.BaseEntity;
-import jakarta.persistence.*;
-import lombok.*;
 
-import java.time.LocalDateTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "conversation_context",
@@ -26,7 +39,7 @@ public class ConversationContext extends BaseEntity {
     @Column(name = "context_key", nullable = false, length = 100)
     private String contextKey;
 
-    @Column(name = "context_value", columnDefinition = "nvarchar(500)")
+    @Column(name = "context_value", columnDefinition = "nvarchar(max)")
     private String contextValue;
 
     @Enumerated(EnumType.STRING)

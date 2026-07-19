@@ -37,8 +37,8 @@ public class WeeklyReport extends BaseEntity {
     @Column(name = "speaking_attempts")
     private Integer speakingAttempts;
 
-    @Column(name = "completed_adventures")
-    private Integer completedAdventures;
+    @Column(name = "completed_scenarios")
+    private Integer completedScenarios;
 
     @Column(name = "generated_at")
     private LocalDateTime generatedAt;

@@ -27,6 +27,8 @@ import com.exe.buddy_english_be.modules.vocabulary.entity.Vocabulary;
 import com.exe.buddy_english_be.modules.vocabulary.repository.VocabularyRepository;
 import com.exe.buddy_english_be.shared.exception.BusinessException;
 import com.exe.buddy_english_be.shared.exception.ErrorCode;
+import com.exe.buddy_english_be.shared.exception.GeminiQuotaExceededException;
+import com.exe.buddy_english_be.shared.exception.GeminiUnavailableException;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -95,19 +97,21 @@ public class ConversationServiceImpl implements ConversationService {
                     .orElse(null);
         }
 
-        // Find asked vocabulary IDs from context records
-        List<ConversationContext> activeContexts = contextRepository.findBySessionIdAndIsActiveTrue(session.getId());
-        Set<Long> askedIds = activeContexts.stream()
-                .filter(ctx -> "asked_vocab_id".equals(ctx.getContextKey()))
-                .map(ctx -> {
+        // Find asked vocabulary IDs from context (single row, comma-separated)
+        Optional<ConversationContext> askedCtxOpt = contextRepository
+                .findBySessionIdAndContextKeyAndContextType(session.getId(), "asked_vocab_id", ContextType.LEARNING);
+
+        Set<Long> askedIds = new HashSet<>();
+        if (askedCtxOpt.isPresent() && askedCtxOpt.get().getIsActive()) {
+            String raw = askedCtxOpt.get().getContextValue();
+            if (raw != null && !raw.isBlank()) {
+                for (String part : raw.split(",")) {
                     try {
-                        return Long.parseLong(ctx.getContextValue());
-                    } catch (NumberFormatException e) {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+                        askedIds.add(Long.parseLong(part.trim()));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
 
         Optional<Vocabulary> nextVocabulary = learnedVocabulary.stream()
                 .filter(vocabulary -> !askedIds.contains(vocabulary.getId()))
@@ -120,15 +124,25 @@ public class ConversationServiceImpl implements ConversationService {
             vocabulary = nextVocabulary.get();
             askedIds.add(vocabulary.getId());
 
-            // Save asked vocabulary to context
-            ConversationContext askedCtx = ConversationContext.builder()
-                    .session(session)
-                    .contextKey("asked_vocab_id")
-                    .contextValue(vocabulary.getId().toString())
-                    .contextType(ContextType.LEARNING)
-                    .isActive(true)
-                    .build();
-            contextRepository.save(askedCtx);
+            // Save/update asked vocabulary to context (single row, comma-separated)
+            String newAskedValue = askedIds.stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(","));
+            if (askedCtxOpt.isPresent()) {
+                ConversationContext askedCtx = askedCtxOpt.get();
+                askedCtx.setContextValue(newAskedValue);
+                askedCtx.setIsActive(true);
+                contextRepository.save(askedCtx);
+            } else {
+                ConversationContext askedCtx = ConversationContext.builder()
+                        .session(session)
+                        .contextKey("asked_vocab_id")
+                        .contextValue(newAskedValue)
+                        .contextType(ContextType.LEARNING)
+                        .isActive(true)
+                        .build();
+                contextRepository.save(askedCtx);
+            }
 
             // Update current vocabulary context
             if (currentVocabCtx.isPresent()) {
@@ -224,12 +238,15 @@ public class ConversationServiceImpl implements ConversationService {
             fallbackReply = "Nice work. We have already practiced every vocabulary word you have learned so far. Learn a new topic and I will make fresh questions for you.";
         }
 
-        // 2. Call Gemini
-        String reply = geminiService.generateResponse(systemInstruction, userPrompt);
-
-        // 3. Check fallback
-        if (reply == null || reply.startsWith("WARNING_NO_API_KEY") || reply.startsWith("ERROR_")) {
-            log.warn("Gemini service failed (status: {}). Activating hardcoded fallback.", reply);
+        // 2. Call Gemini; fall back to hardcoded reply if AI is unavailable
+        String reply;
+        try {
+            reply = geminiService.generateResponse(systemInstruction, userPrompt);
+        } catch (GeminiQuotaExceededException e) {
+            log.warn("Gemini quota exceeded for userId: {}. Activating hardcoded fallback.", userId, e);
+            reply = fallbackReply;
+        } catch (GeminiUnavailableException e) {
+            log.warn("Gemini unavailable for userId: {}. Activating hardcoded fallback.", userId, e);
             reply = fallbackReply;
         }
 
