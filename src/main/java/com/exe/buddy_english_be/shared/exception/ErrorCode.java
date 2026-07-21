@@ -33,6 +33,8 @@ public enum ErrorCode {
     BUDDY_CUSTOMIZATION_NOT_FOUND("Buddy customization not found", HttpStatus.NOT_FOUND),
     CHILD_CUSTOMIZATION_NOT_FOUND("Child customization not found", HttpStatus.NOT_FOUND),
     CHILD_MEMORY_NOT_FOUND("Child memory not found", HttpStatus.NOT_FOUND),
+    STUDY_SESSION_NOT_FOUND("Study session not found", HttpStatus.NOT_FOUND),
+    HIGHLIGHT_NOT_FOUND("Highlight not found", HttpStatus.NOT_FOUND),
     INTERNAL_SERVER_ERROR("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String message;
