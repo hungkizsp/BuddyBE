@@ -28,6 +28,7 @@ import com.exe.buddy_english_be.security.JwtProvider;
 import com.exe.buddy_english_be.shared.exception.BusinessException;
 import com.exe.buddy_english_be.shared.exception.ErrorCode;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Service
@@ -127,6 +128,34 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = jwtProvider.generateRefreshToken(user);
         cookieUtil.addAccessTokenCookie(response, accessToken);
         cookieUtil.addRefreshTokenCookie(response, refreshToken);
+
+        return toLoginResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LoginResponse refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = cookieUtil.getRefreshToken(request);
+        if (refreshToken == null || !jwtProvider.isTokenValid(refreshToken)) {
+            cookieUtil.clearAuthCookies(response);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        String tokenType = jwtProvider.getTokenType(refreshToken);
+        if (!"REFRESH".equals(tokenType)) {
+            cookieUtil.clearAuthCookies(response);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Long userId = jwtProvider.getUserId(refreshToken);
+        User user = userRepository.findByIdWithRoles(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        String newAccessToken = jwtProvider.generateAccessToken(user);
+        String newRefreshToken = jwtProvider.generateRefreshToken(user);
+
+        cookieUtil.addAccessTokenCookie(response, newAccessToken);
+        cookieUtil.addRefreshTokenCookie(response, newRefreshToken);
 
         return toLoginResponse(user);
     }

@@ -45,6 +45,10 @@ public class CookieUtil {
         return getCookieValue(request, ACCESS_TOKEN_COOKIE);
     }
 
+    public String getRefreshToken(HttpServletRequest request) {
+        return getCookieValue(request, REFRESH_TOKEN_COOKIE);
+    }
+
     private void addCookie(HttpServletResponse response, String name, String value, long maxAgeSeconds) {
         ResponseCookie cookie = ResponseCookie.from(name, value)
                 .httpOnly(true)

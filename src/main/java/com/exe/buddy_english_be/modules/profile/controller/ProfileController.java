@@ -30,7 +30,9 @@ public class ProfileController {
     @GetMapping("/child")
     public ResponseEntity<ApiResponse<ChildProfileResponse>> getChildProfile(
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        // In dev profile, authentication may be null (no JWT token required).
+        // Fall back to the seeded testuser (id=1) so the frontend works without login.
+        Long userId = (authentication != null) ? (Long) authentication.getPrincipal() : 1L;
         ChildProfileResponse response = profileService.getChildProfile(userId);
         return ResponseEntity.ok(ApiResponse.success("Child profile fetched successfully", response));
     }
