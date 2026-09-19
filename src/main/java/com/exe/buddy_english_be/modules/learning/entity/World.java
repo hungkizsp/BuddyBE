@@ -13,7 +13,7 @@ import lombok.*;
 @Builder
 public class World extends BaseEntity {
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100, columnDefinition = "nvarchar(500)")
     private String name;
 
     @Column(name = "description", columnDefinition = "nvarchar(500)")

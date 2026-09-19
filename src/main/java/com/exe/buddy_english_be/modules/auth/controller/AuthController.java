@@ -14,6 +14,7 @@ import com.exe.buddy_english_be.modules.auth.dto.SignupRequest;
 import com.exe.buddy_english_be.modules.auth.service.AuthService;
 import com.exe.buddy_english_be.shared.response.ApiResponse;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,14 @@ public class AuthController {
             HttpServletResponse response) {
         LoginResponse signupResponse = authService.signup(request, response);
         return ResponseEntity.ok(ApiResponse.success("Registration successful", signupResponse));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        LoginResponse loginResponse = authService.refreshToken(request, response);
+        return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", loginResponse));
     }
 
     @GetMapping("/me")

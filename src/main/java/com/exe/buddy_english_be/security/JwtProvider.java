@@ -58,6 +58,10 @@ public class JwtProvider {
         return Long.valueOf(getClaims(token).getSubject());
     }
 
+    public String getTokenType(String token) {
+        return getClaims(token).get("type", String.class);
+    }
+
     private String generateToken(User user, long expirationMs, String tokenType) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + expirationMs);
