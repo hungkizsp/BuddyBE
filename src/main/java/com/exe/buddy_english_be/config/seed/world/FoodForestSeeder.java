@@ -441,177 +441,186 @@ public class FoodForestSeeder {
                                 .description("Hãy cùng Buddy thưởng thức bữa ăn ngon lành tại nhà hàng gia đình!")
                                 .scenarioType("ORDER_FOOD")
                                 .expectedIntent("ORDER_FOOD")
-                                .difficulty("MEDIUM")
+                                .difficulty("EASY")
                                 .orderIndex(3)
                                 .build());
 
-                Vocabulary BroccoliSoup = vocabularyRepository.save(Vocabulary.builder()
+                // Step 1: Appetizer / Fast Food
+                Vocabulary Bread = vocabularyRepository.save(Vocabulary.builder()
                                 .category(foodCategory)
-                                .word("Broccoli Soup")
-                                .phonetic("/ˈbrɒk.əl.i suːp/")
-                                .meaning("Súp bông cải xanh")
-                                .exampleSentence("Broccoli soup is healthy.")
-                                .imageUrl("/images/vocabulary/broccoli-soup.png")
-                                .difficulty("MEDIUM")
-                                .build());
-                Vocabulary MashedPotatoes = vocabularyRepository.save(Vocabulary.builder()
-                                .category(foodCategory)
-                                .word("Mashed Potatoes")
-                                .phonetic("/mæʃt pəˈteɪ.təʊz/")
-                                .meaning("Khoai tây nghiền")
-                                .exampleSentence("Mashed potatoes are creamy.")
-                                .imageUrl("/images/vocabulary/mashed-potatoes.png")
-                                .difficulty("MEDIUM")
-                                .build());
-                Vocabulary GarlicBread = vocabularyRepository.save(Vocabulary.builder()
-                                .category(foodCategory)
-                                .word("Garlic Bread")
-                                .phonetic("/ˈɡɑː.lɪk bred/")
-                                .meaning("Bánh mì tỏi")
-                                .exampleSentence("Garlic bread is tasty.")
-                                .imageUrl("/images/vocabulary/garlic-bread.png")
-                                .difficulty("MEDIUM")
-                                .build());
-                // step2
-                Vocabulary GrilledChicken = vocabularyRepository.save(Vocabulary.builder()
-                                .category(foodCategory)
-                                .word("Grilled Chicken")
-                                .phonetic("/ɡrɪld ˈtʃɪk.ɪn/")
-                                .meaning("Gà nướng")
-                                .exampleSentence("Grilled chicken is delicious.")
-                                .imageUrl("/images/vocabulary/grilled-chicken.png")
-                                .difficulty("MEDIUM")
-                                .build());
-                Vocabulary BeefSteak = vocabularyRepository.save(Vocabulary.builder()
-                                .category(foodCategory)
-                                .word("Beef Steak")
-                                .phonetic("/biːf steɪk/")
-                                .meaning("Bít tết bò")
-                                .exampleSentence("Beef steak is my favorite.")
-                                .imageUrl("/images/vocabulary/beef-steak.png")
-                                .difficulty("MEDIUM")
-                                .build());
-                Vocabulary PorkChop = vocabularyRepository.save(Vocabulary.builder()
-                                .category(foodCategory)
-                                .word("Pork Chop")
-                                .phonetic("/pɔːk tʃɒp/")
-                                .meaning("Sườn heo")
-                                .exampleSentence("Pork chop is tasty.")
-                                .imageUrl("/images/vocabulary/pork-chop.png")
-                                .difficulty("MEDIUM")
-                                .build());
-                // step 3
-                Vocabulary ApplePie = vocabularyRepository.save(Vocabulary.builder()
-                                .category(foodCategory)
-                                .word("Apple Pie")
-                                .phonetic("/ˈæp.əl paɪ/")
-                                .meaning("Bánh táo")
-                                .exampleSentence("Apple pie is a classic dessert.")
-                                .imageUrl("/images/vocabulary/apple-pie.png")
-                                .difficulty("MEDIUM")
+                                .word("Bread")
+                                .phonetic("/bred/")
+                                .meaning("Bánh mì")
+                                .exampleSentence("I like warm bread.")
+                                .imageUrl("/images/vocabulary/bread.png")
+                                .difficulty("EASY")
                                 .build());
 
-                Vocabulary cheeseCake = vocabularyRepository.save(Vocabulary.builder()
+                Vocabulary Soup = vocabularyRepository.save(Vocabulary.builder()
                                 .category(foodCategory)
-                                .word("Cheesecake")
-                                .phonetic("/ˈtʃiːz.keɪk/")
-                                .meaning("Bánh phô mai")
-                                .exampleSentence("I love eating cheesecake.")
-                                .imageUrl("/images/vocabulary/cheesecake.png")
-                                .difficulty("MEDIUM")
+                                .word("Soup")
+                                .phonetic("/suːp/")
+                                .meaning("Món súp")
+                                .exampleSentence("Hot soup is yummy.")
+                                .imageUrl("/images/vocabulary/soup.png")
+                                .difficulty("EASY")
                                 .build());
-                Vocabulary chocolateCake = vocabularyRepository.save(Vocabulary.builder()
+
+                Vocabulary Salad = vocabularyRepository.save(Vocabulary.builder()
                                 .category(foodCategory)
-                                .word("Chocolate Cake")
-                                .phonetic("/ˈtʃɒk.lət keɪk/")
-                                .meaning("Bánh sô cô la")
-                                .exampleSentence("Chocolate cake is rich and sweet.")
-                                .imageUrl("/images/vocabulary/chocolate-cake.png")
-                                .difficulty("MEDIUM")
+                                .word("Salad")
+                                .phonetic("/ˈsæl.əd/")
+                                .meaning("Rau trộn")
+                                .exampleSentence("Fresh salad is good.")
+                                .imageUrl("/images/vocabulary/salad.png")
+                                .difficulty("EASY")
                                 .build());
-                // step 4
-                Vocabulary MilkShake = vocabularyRepository.save(Vocabulary.builder()
+
+                // Step 2: Main Course
+                Vocabulary Chicken = vocabularyRepository.save(Vocabulary.builder()
                                 .category(foodCategory)
-                                .word("Milkshake")
-                                .phonetic("/ˈmɪlk.ʃeɪk/")
-                                .meaning("Sữa lắc")
-                                .exampleSentence("I like strawberry milkshake.")
-                                .imageUrl("/images/vocabulary/milkshake.png")
-                                .difficulty("MEDIUM")
+                                .word("Chicken")
+                                .phonetic("/ˈtʃɪk.ɪn/")
+                                .meaning("Thịt gà")
+                                .exampleSentence("Chicken is very tasty.")
+                                .imageUrl("/images/vocabulary/chicken.png")
+                                .difficulty("EASY")
                                 .build());
-                Vocabulary OrangeJuice = vocabularyRepository.save(Vocabulary.builder()
+
+                Vocabulary Pizza = vocabularyRepository.save(Vocabulary.builder()
                                 .category(foodCategory)
-                                .word("Orange Juice")
-                                .phonetic("/ˈɒr.ɪndʒ dʒuːs/")
-                                .meaning("Nước cam")
-                                .exampleSentence("I drink orange juice every morning.")
-                                .imageUrl("/images/vocabulary/orange-juice.png")
-                                .difficulty("MEDIUM")
+                                .word("Pizza")
+                                .phonetic("/ˈpiːt.sə/")
+                                .meaning("Bánh pít-gơ")
+                                .exampleSentence("I love cheese pizza.")
+                                .imageUrl("/images/vocabulary/pizza.png")
+                                .difficulty("EASY")
                                 .build());
-                Vocabulary AppleJuice = vocabularyRepository.save(Vocabulary.builder()
+
+                Vocabulary Rice = vocabularyRepository.save(Vocabulary.builder()
                                 .category(foodCategory)
-                                .word("Apple Juice")
-                                .phonetic("/ˈæp.əl dʒuːs/")
-                                .meaning("Nước táo")
-                                .exampleSentence("Apple juice is refreshing.")
-                                .imageUrl("/images/vocabulary/apple-juice.png")
-                                .difficulty("MEDIUM")
+                                .word("Rice")
+                                .phonetic("/raɪs/")
+                                .meaning("Cơm")
+                                .exampleSentence("I eat rice every day.")
+                                .imageUrl("/images/vocabulary/rice.png")
+                                .difficulty("EASY")
                                 .build());
+
+                // Step 3: Dessert
+                Vocabulary Cake = vocabularyRepository.save(Vocabulary.builder()
+                                .category(foodCategory)
+                                .word("Cake")
+                                .phonetic("/keɪk/")
+                                .meaning("Bánh ngọt")
+                                .exampleSentence("The cake is sweet.")
+                                .imageUrl("/images/vocabulary/cake.png")
+                                .difficulty("EASY")
+                                .build());
+
+                Vocabulary Apple = vocabularyRepository.save(Vocabulary.builder()
+                                .category(foodCategory)
+                                .word("Apple")
+                                .phonetic("/ˈæp.əl/")
+                                .meaning("Quả táo")
+                                .exampleSentence("An apple a day is good.")
+                                .imageUrl("/images/vocabulary/apple.png")
+                                .difficulty("EASY")
+                                .build());
+
+                Vocabulary IceCream = vocabularyRepository.save(Vocabulary.builder()
+                                .category(foodCategory)
+                                .word("Ice cream")
+                                .phonetic("/ˌaɪs ˈkriːm/")
+                                .meaning("Kem")
+                                .exampleSentence("Cold ice cream is fun.")
+                                .imageUrl("/images/vocabulary/ice-cream.png")
+                                .difficulty("EASY")
+                                .build());
+
+                // Step 4: Drink
+                Vocabulary Milk = vocabularyRepository.save(Vocabulary.builder()
+                                .category(foodCategory)
+                                .word("Milk")
+                                .phonetic("/mɪlk/")
+                                .meaning("Sữa")
+                                .exampleSentence("Milk gives you strong bones.")
+                                .imageUrl("/images/vocabulary/milk.png")
+                                .difficulty("EASY")
+                                .build());
+
+                Vocabulary Juice = vocabularyRepository.save(Vocabulary.builder()
+                                .category(foodCategory)
+                                .word("Juice")
+                                .phonetic("/dʒuːs/")
+                                .meaning("Nước trái cây")
+                                .exampleSentence("I drink sweet juice.")
+                                .imageUrl("/images/vocabulary/juice.png")
+                                .difficulty("EASY")
+                                .build());
+
+                Vocabulary Water = vocabularyRepository.save(Vocabulary.builder()
+                                .category(foodCategory)
+                                .word("Water")
+                                .phonetic("/ˈwɔː.tər/")
+                                .meaning("Nước lọc")
+                                .exampleSentence("Drink water every day.")
+                                .imageUrl("/images/vocabulary/water.png")
+                                .difficulty("EASY")
+                                .build());
+
+                // Save Scenario Vocabularies
                 scenarioVocabularyRepository.saveAll(List.of(
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(BroccoliSoup)
-                                                .build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(MashedPotatoes)
-                                                .build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(GarlicBread).build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(GrilledChicken)
-                                                .build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(BeefSteak).build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(PorkChop).build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(ApplePie).build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(cheeseCake).build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(chocolateCake)
-                                                .build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(MilkShake).build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(OrangeJuice).build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(AppleJuice)
-                                                .build()));
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Bread).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Soup).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Salad).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Chicken).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Pizza).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Rice).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Cake).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Apple).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(IceCream).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Milk).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Juice).build(),
+                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Water).build()));
+
+                // Save Scenario Steps
                 scenarioStepRepository.saveAll(List.of(
                                 ScenarioStep.builder()
                                                 .scenario(FamilyRestaurant)
                                                 .stepOrder(1)
-                                                .buddyMessage("Mình muốn ăn món khai vị trước. Mình thích món làm từ Bread. Bạn giúp mình gọi nhé!")
+                                                .buddyMessage("Bụng mình bắt đầu reo rồi! Mình muốn ăn một ổ bánh mì mềm thơm. Bạn gọi giúp mình nhé!")
                                                 .expectedIntent("ORDER_FOOD")
-                                                .expectedEntity("GARLIC_BREAD")
-                                                .successResponse("Đúng rồi! Garlic Bread là món mình muốn ăn.")
-                                                .failResponse("Hãy tìm món khai vị có Bread nhé!")
+                                                .expectedEntity("BREAD")
+                                                .successResponse("Ngon quá! Đúng là BREAD rồi!")
+                                                .failResponse("Bé thử chọn BREAD (bánh mì) xem sao nhé!")
                                                 .build(),
                                 ScenarioStep.builder()
                                                 .scenario(FamilyRestaurant)
                                                 .stepOrder(2)
-                                                .buddyMessage("Giờ mình muốn món chính. Mình thích Chicken hơn các loại thịt khác.")
+                                                .buddyMessage("Tiếp theo là món chính! Mình thích ăn gà lắm. Bạn gọi món Chicken giúp mình nào!")
                                                 .expectedIntent("ORDER_FOOD")
-                                                .expectedEntity("GRILLED_CHICKEN")
-                                                .successResponse(
-                                                                "Tuyệt quá! Món khoái khẩu của mình là Grilled Chicken!")
-                                                .failResponse("Hãy chọn món chính có Chicken nhé!")
+                                                .expectedEntity("CHICKEN")
+                                                .successResponse("Yummy! Món CHICKEN này thơm thật đấy!")
+                                                .failResponse("Bé tìm món CHICKEN (thịt gà) nha!")
                                                 .build(),
                                 ScenarioStep.builder()
                                                 .scenario(FamilyRestaurant)
                                                 .stepOrder(3)
-                                                .buddyMessage("Đến món tráng miệng rồi! Mình muốn món ngọt có Apple.")
+                                                .buddyMessage("Đến giờ ăn bánh rồi! Cho mình một chiếc Cake thật ngọt ngào nhé.")
                                                 .expectedIntent("ORDER_FOOD")
-                                                .expectedEntity("APPLE_PIE")
-                                                .successResponse("Tuyệt quá! Apple Pie là món mình thích nhất.")
-                                                .failResponse("Hãy tìm món tráng miệng có Apple nhé!")
+                                                .expectedEntity("CAKE")
+                                                .successResponse("Thích quá! CAKE ngọt lịm luôn!")
+                                                .failResponse("Bé chọn CAKE (bánh ngọt) giúp bạn nhé!")
                                                 .build(),
                                 ScenarioStep.builder()
                                                 .scenario(FamilyRestaurant)
                                                 .stepOrder(4)
-                                                .buddyMessage("Cuối cùng mình muốn một thức uống làm từ Milk.")
+                                                .buddyMessage("Ăn xong hơi khát nước rồi. Cho mình một ly Milk màu trắng mát lạnh nha!")
                                                 .expectedIntent("ORDER_DRINK")
-                                                .expectedEntity("MILKSHAKE")
-                                                .successResponse("Cảm ơn bạn! Bữa ăn của mình đã hoàn hảo rồi!")
-                                                .failResponse("Hãy chọn thức uống có Milk nhé!")
+                                                .expectedEntity("MILK")
+                                                .successResponse("Cảm ơn bé! MILK vừa ngon vừa bổ dưỡng!")
+                                                .failResponse("Bé chọn MILK (sữa) để bạn uống nha!")
                                                 .build()));
         }
 }
