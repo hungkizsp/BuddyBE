@@ -487,26 +487,6 @@ public class FoodForestSeeder {
                                 .difficulty("EASY")
                                 .build());
 
-                Vocabulary Pizza = vocabularyRepository.save(Vocabulary.builder()
-                                .category(foodCategory)
-                                .word("Pizza")
-                                .phonetic("/ˈpiːt.sə/")
-                                .meaning("Bánh pít-gơ")
-                                .exampleSentence("I love cheese pizza.")
-                                .imageUrl("/images/vocabulary/pizza.png")
-                                .difficulty("EASY")
-                                .build());
-
-                Vocabulary Rice = vocabularyRepository.save(Vocabulary.builder()
-                                .category(foodCategory)
-                                .word("Rice")
-                                .phonetic("/raɪs/")
-                                .meaning("Cơm")
-                                .exampleSentence("I eat rice every day.")
-                                .imageUrl("/images/vocabulary/rice.png")
-                                .difficulty("EASY")
-                                .build());
-
                 // Step 3: Dessert
                 Vocabulary Cake = vocabularyRepository.save(Vocabulary.builder()
                                 .category(foodCategory)
@@ -575,8 +555,6 @@ public class FoodForestSeeder {
                                 ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Soup).build(),
                                 ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Salad).build(),
                                 ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Chicken).build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Pizza).build(),
-                                ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Rice).build(),
                                 ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Cake).build(),
                                 ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(Apple).build(),
                                 ScenarioVocabulary.builder().scenario(FamilyRestaurant).vocabulary(IceCream).build(),
