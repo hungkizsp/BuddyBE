@@ -47,7 +47,7 @@ public class NotificationSseEmitter {
                     emitter.send(SseEmitter.event()
                             .name("NEW_NOTIFICATION")
                             .data(notification));
-                } catch (IOException e) {
+                } catch (Exception e) {
                     removeEmitter(childId, emitter);
                 }
             }
@@ -62,7 +62,7 @@ public class NotificationSseEmitter {
                     emitter.send(
                             SseEmitter.event()
                                     .comment("heartbeat"));
-                } catch (IOException e) {
+                } catch (Exception e) {
                     removeEmitter(childId, emitter);
                 }
             }
