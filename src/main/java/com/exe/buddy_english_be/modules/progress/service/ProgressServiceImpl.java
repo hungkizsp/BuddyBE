@@ -10,6 +10,8 @@ import com.exe.buddy_english_be.modules.learning.entity.Scenario;
 import com.exe.buddy_english_be.modules.learning.entity.World;
 import com.exe.buddy_english_be.modules.learning.repository.ScenarioRepository;
 import com.exe.buddy_english_be.modules.learning.repository.WorldRepository;
+import com.exe.buddy_english_be.modules.notification.dto.NotificationRequest;
+import com.exe.buddy_english_be.modules.notification.service.NotificationService;
 import com.exe.buddy_english_be.modules.profile.entity.ChildProfile;
 import com.exe.buddy_english_be.modules.profile.repository.ChildProfileRepository;
 import com.exe.buddy_english_be.modules.progress.dto.ChildScenarioProgressRequest;
@@ -44,6 +46,7 @@ public class ProgressServiceImpl implements ProgressService {
     private final VocabularyRepository vocabularyRepository;
     private final WorldRepository worldRepository;
     private final ScenarioRepository scenarioRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -336,6 +339,15 @@ public class ProgressServiceImpl implements ProgressService {
         scenarioProgress.setLastPlayedAt(now);
         if (!alreadyCompleted) {
             scenarioProgress.setCompletedAt(now);
+
+            // Gửi thông báo hoàn thành màn chơi
+            notificationService.createNotification(new NotificationRequest(
+                    request.childId(),
+                    "Hoàn thành màn chơi",
+                    "Chúc mừng bạn đã hoàn thành xuất sắc màn chơi " + scenario.getTitle() + "!",
+                    "MISSION",
+                    false
+            ));
         }
 
         ChildScenarioProgress savedScenario = scenarioProgressRepository.save(scenarioProgress);
