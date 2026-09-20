@@ -46,7 +46,7 @@ public class UserSeeder {
 
         buddyProfileRepository.save(BuddyProfile.builder()
                 .child(childProfile)
-                .name("Buddy")
+                .name("Bolly")
                 .level(2)
                 .friendshipPoints(20)
                 .mood(BuddyMood.HAPPY)
