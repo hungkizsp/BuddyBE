@@ -69,7 +69,7 @@ public class ConversationServiceImpl implements ConversationService {
         List<Vocabulary> learnedVocabulary = getLearnedVocabulary(child.getId());
 
         if (learnedVocabulary.isEmpty()) {
-            String reply = "You have not learned any vocabulary yet. Learn a new topic first, then I can practice it with you.";
+            String reply = "Bé chưa học từ vựng nào nè. Bé hãy học xong bài mới rồi quay lại luyện tập cùng Bolly nhé!";
             saveBuddyMessage(session, reply);
             return ChatResponse.builder()
                     .reply(reply)
@@ -85,7 +85,8 @@ public class ConversationServiceImpl implements ConversationService {
         if (currentVocabCtx.isPresent() && currentVocabCtx.get().getIsActive()) {
             try {
                 prevVocabularyId = Long.parseLong(currentVocabCtx.get().getContextValue());
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         }
 
         Vocabulary prevVocabulary = null;
@@ -108,7 +109,8 @@ public class ConversationServiceImpl implements ConversationService {
                 for (String part : raw.split(",")) {
                     try {
                         askedIds.add(Long.parseLong(part.trim()));
-                    } catch (NumberFormatException ignored) {}
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             }
         }
@@ -174,41 +176,39 @@ public class ConversationServiceImpl implements ConversationService {
                 .map(v -> String.format("- %s (Meaning: %s, Category: %s)",
                         v.getWord(),
                         v.getMeaning(),
-                        v.getCategory() != null ? v.getCategory().getName() : "General"))
+                        v.getCategory() != null ? v.getCategory().getName() : "Chung"))
                 .collect(Collectors.joining("\n"));
 
         String systemInstruction = String.format(
                 """
-                        You are "Buddy", a friendly, patient, and encouraging English-learning assistant.
-                        Your task is to help the user practice their learned English vocabulary words in a conversational way.
+                        You are "Bolly", a friendly, patient, and cheerful English-learning assistant for children aged 6 to 10 years old.
+                        Your goal is to practice English vocabulary with the child in a fun and encouraging way.
 
-                        Guidelines:
-                        1. Always keep your response concise (under 3-4 sentences) and natural, like a chat messenger.
-                        2. Match the user's English level (Level %d). Use vocabulary and grammar appropriate for this level.
-                        3. The user's nickname is: %s.
-                        4. The user has learned these vocabulary words so far:
-                        %s
+                        CRITICAL RULES:
+                        1. Always reply in VIETNAMESE, but keep the target English vocabulary words in English so the child can practice.
+                        2. Keep responses VERY SHORT and SIMPLE (1 to 2 short sentences). Use language suitable for a 6-10 year old child (use words like "bé", "nhé", "Bolly").
+                        3. STRICTLY DO NOT use Markdown formatting anywhere (NO asterisks **, NO hashtags #, NO bullet points, NO underline). Plain text only!
+                        4. Child's nickname: %s.
 
-                        Your responses should follow these rules:
-                        - If the user was practicing a word in their previous turn, analyze the user's latest input. If they used the word correctly, praise them. If they made a grammatical error or used it incorrectly, provide friendly, gentle corrections and explain why.
-                        - If there is a new vocabulary word to practice, transition naturally and ask the user to use the new word in a sentence or explain a situation using it.
-                        - If all vocabulary words have been practiced, congratulate the user, offer to review any of the words, or encourage them to learn new topics.
+                        Conversation Guide:
+                        - If the child was practicing a word previously, check their answer gently. Praise them if correct, or kindly encourage them if wrong.
+                        - If there is a new word to practice, introduce it simply in Vietnamese and ask the child to repeat, translate, or make a short sentence with it.
+                        - If all words are completed, praise the child warmly and encourage them to learn new topics.
                         """,
-                child.getLevel() != null ? child.getLevel() : 1,
-                child.getNickname() != null ? child.getNickname() : "Learner",
+                child.getNickname() != null ? child.getNickname() : "bé",
                 vocabList);
 
         String sessionSummary = getSummaryFromContext(session.getId());
 
         StringBuilder userPromptBuilder = new StringBuilder();
         if (sessionSummary != null && !sessionSummary.isBlank()) {
-            userPromptBuilder.append("Conversation history summary so far:\n")
+            userPromptBuilder.append("Conversation history summary:\n")
                     .append(sessionSummary)
                     .append("\n\n");
         }
 
         if (prevVocabulary != null) {
-            userPromptBuilder.append("Previous word the user was practicing: \"")
+            userPromptBuilder.append("Previous practicing word: \"")
                     .append(prevVocabulary.getWord())
                     .append("\" (Meaning: \"")
                     .append(prevVocabulary.getMeaning())
@@ -216,7 +216,7 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         if (vocabulary != null) {
-            userPromptBuilder.append("Next word to practice: \"")
+            userPromptBuilder.append("New word to practice now: \"")
                     .append(vocabulary.getWord())
                     .append("\" (Meaning: \"")
                     .append(vocabulary.getMeaning())
@@ -224,24 +224,25 @@ public class ConversationServiceImpl implements ConversationService {
                     .append(vocabulary.getCategory() != null ? vocabulary.getCategory().getName() : "General")
                     .append("\")\n");
         } else {
-            userPromptBuilder.append("No new words left to practice. All words have been asked.\n");
+            userPromptBuilder.append("All vocabulary words have been practiced.\n");
         }
 
-        userPromptBuilder.append("\nUser's message: ").append(request.message());
+        userPromptBuilder.append("\nChild's message: ").append(request.message());
         String userPrompt = userPromptBuilder.toString();
 
-        // 1. Build hardcoded fallback reply
+        // 1. Build hardcoded fallback reply in Vietnamese
         String fallbackReply;
         if (vocabulary != null) {
             fallbackReply = buildPracticeReply(session.getTotalMessages(), vocabulary);
         } else {
-            fallbackReply = "Nice work. We have already practiced every vocabulary word you have learned so far. Learn a new topic and I will make fresh questions for you.";
+            fallbackReply = "Giỏi lắm! Chúng mình đã ôn hết từ vựng rồi. Bé hãy học thêm bài mới để tiếp tục chơi cùng Bolly nhé!";
         }
 
         // 2. Call Gemini; fall back to hardcoded reply if AI is unavailable
         String reply;
         try {
             reply = geminiService.generateResponse(systemInstruction, userPrompt);
+            reply = stripMarkdown(reply); // Clean markdown formatting
         } catch (GeminiQuotaExceededException e) {
             log.warn("Gemini quota exceeded for userId: {}. Activating hardcoded fallback.", userId, e);
             reply = fallbackReply;
@@ -263,7 +264,8 @@ public class ConversationServiceImpl implements ConversationService {
                 .summary(getSummaryFromContext(session.getId()))
                 .vocabularyWord(vocabulary == null ? null : vocabulary.getWord())
                 .vocabularyMeaning(vocabulary == null ? null : vocabulary.getMeaning())
-                .vocabularyCategory(vocabulary == null ? null : (vocabulary.getCategory() != null ? vocabulary.getCategory().getName() : "General"))
+                .vocabularyCategory(vocabulary == null ? null
+                        : (vocabulary.getCategory() != null ? vocabulary.getCategory().getName() : "General"))
                 .allLearnedVocabularyAsked(allAsked)
                 .build();
     }
@@ -285,7 +287,8 @@ public class ConversationServiceImpl implements ConversationService {
             return ChatResponse.builder().reply("").summary("").allLearnedVocabularyAsked(false).build();
         }
 
-        List<ConversationMessage> messages = messageRepository.findTop20BySessionIdOrderByCreatedAtDesc(session.getId());
+        List<ConversationMessage> messages = messageRepository
+                .findTop20BySessionIdOrderByCreatedAtDesc(session.getId());
         String lastReply = "";
         for (ConversationMessage msg : messages) {
             if (msg.getSender() == MessageSender.BUDDY) {
@@ -379,7 +382,8 @@ public class ConversationServiceImpl implements ConversationService {
         if (lines.length > 5) {
             StringBuilder sb = new StringBuilder();
             for (int i = lines.length - 5; i < lines.length; i++) {
-                if (sb.length() > 0) sb.append("\n");
+                if (sb.length() > 0)
+                    sb.append("\n");
                 sb.append(lines[i]);
             }
             newSummary = sb.toString();
@@ -407,21 +411,27 @@ public class ConversationServiceImpl implements ConversationService {
     private String buildPracticeReply(int totalMessages, Vocabulary vocabulary) {
         int turn = totalMessages / 2 + 1;
         String word = vocabulary.getWord();
-        String meaning = vocabulary.getMeaning() == null || vocabulary.getMeaning().isBlank()
-                ? "its meaning"
+        String meaning = (vocabulary.getMeaning() == null || vocabulary.getMeaning().isBlank())
+                ? "nghĩa của từ"
                 : vocabulary.getMeaning();
-        String category = vocabulary.getCategory() != null
-                ? vocabulary.getCategory().getName()
-                : "your vocabulary list";
 
         return switch (turn % 3) {
-            case 1 -> "Let's practice \"" + word + "\" from " + category
-                    + ". It means \"" + meaning + "\". Can you write one short sentence using \"" + word + "\"?";
-            case 2 -> "Good, let's try a new angle. What is a real-life situation where you could use \""
-                    + word + "\"? Keep it simple and natural.";
-            default -> "Quick check: choose the better meaning for \"" + word
-                    + "\": \"" + meaning + "\" or something different? After that, make your own example.";
+            case 1 -> "Hôm nay chúng mình cùng luyện từ \"" + word + "\" có nghĩa là \"" + meaning
+                    + "\" nhé. Bé hãy thử đặt câu đơn giản với từ \"" + word + "\" cho Bolly nghe nào!";
+            case 2 -> "Thế bé có biết trong thực tế, khi nào chúng mình dùng từ \"" + word
+                    + "\" không? Nhắn cho Bolly biết nhé!";
+            default -> "Đố bé biết từ \"" + word + "\" nghĩa là gì nào? Có phải là \"" + meaning + "\" không nhỉ?";
         };
+    }
+
+    private String stripMarkdown(String input) {
+        if (input == null)
+            return "";
+        return input.replaceAll("\\*\\*", "")
+                .replaceAll("\\*", "")
+                .replaceAll("#+", "")
+                .replaceAll("`", "")
+                .trim();
     }
 
     private String normalize(String value) {
@@ -434,7 +444,8 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     private String truncate(String value, int maxLen) {
-        if (value == null) return "";
+        if (value == null)
+            return "";
         return value.length() <= maxLen ? value : value.substring(0, maxLen) + "...";
     }
 }
