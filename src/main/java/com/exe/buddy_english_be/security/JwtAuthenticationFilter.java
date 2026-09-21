@@ -43,8 +43,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         String token = cookieUtil.getAccessToken(request);
+        if (token == null || token.isBlank()) {
+            String bearerToken = request.getHeader("Authorization");
+            if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+                token = bearerToken.substring(7).trim();
+            }
+        }
 
-        if (token != null && SecurityContextHolder.getContext().getAuthentication() == null
+        if (token != null && !token.isBlank() && SecurityContextHolder.getContext().getAuthentication() == null
                 && jwtProvider.isTokenValid(token)) {
             Long userId = jwtProvider.getUserId(token);
             userRepository.findByIdWithRoles(userId).ifPresent(this::authenticate);

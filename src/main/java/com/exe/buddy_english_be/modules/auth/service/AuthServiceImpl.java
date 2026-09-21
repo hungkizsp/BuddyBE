@@ -83,13 +83,33 @@ public class AuthServiceImpl implements AuthService {
         cookieUtil.addAccessTokenCookie(response, accessToken);
         cookieUtil.addRefreshTokenCookie(response, refreshToken);
 
-        return toLoginResponse(user);
+        return toLoginResponse(user, accessToken, refreshToken);
     }
 
     @Override
     @Transactional
     public LoginResponse loginWithGoogle(GoogleLoginRequest request, HttpServletResponse response) {
         String email = request.email() != null ? request.email().trim().toLowerCase() : "";
+        String displayName = request.name() != null ? request.name().trim() : "";
+
+        if ((email.isBlank() || displayName.isBlank()) && request.idToken() != null && request.idToken().contains(".")) {
+            try {
+                String[] parts = request.idToken().split("\\.");
+                if (parts.length >= 2) {
+                    String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+                    com.fasterxml.jackson.databind.JsonNode json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payloadJson);
+                    if (email.isBlank() && json.has("email")) {
+                        email = json.get("email").asText().trim().toLowerCase();
+                    }
+                    if (displayName.isBlank() && json.has("name")) {
+                        displayName = json.get("name").asText().trim();
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to parse Google idToken payload: {}", e.getMessage());
+            }
+        }
+
         if (email.isBlank() && request.idToken() != null && request.idToken().contains("@")) {
             email = request.idToken().trim().toLowerCase();
         }
@@ -98,9 +118,9 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        String displayName = request.name() != null && !request.name().isBlank() 
-                ? request.name().trim() 
-                : email.split("@")[0];
+        if (displayName.isBlank()) {
+            displayName = email.split("@")[0];
+        }
 
         final String targetEmail = email;
         final String targetNickname = displayName;
@@ -150,7 +170,7 @@ public class AuthServiceImpl implements AuthService {
         cookieUtil.addAccessTokenCookie(response, accessToken);
         cookieUtil.addRefreshTokenCookie(response, refreshToken);
 
-        return toLoginResponse(user);
+        return toLoginResponse(user, accessToken, refreshToken);
     }
 
     @Override
@@ -208,7 +228,7 @@ public class AuthServiceImpl implements AuthService {
         cookieUtil.addAccessTokenCookie(response, accessToken);
         cookieUtil.addRefreshTokenCookie(response, refreshToken);
 
-        return toLoginResponse(user);
+        return toLoginResponse(user, accessToken, refreshToken);
     }
 
     @Override
@@ -258,7 +278,7 @@ public class AuthServiceImpl implements AuthService {
         cookieUtil.addAccessTokenCookie(response, accessToken);
         cookieUtil.addRefreshTokenCookie(response, refreshToken);
 
-        return toLoginResponse(user);
+        return toLoginResponse(user, accessToken, refreshToken);
     }
 
     @Override
@@ -330,7 +350,7 @@ public class AuthServiceImpl implements AuthService {
         cookieUtil.addAccessTokenCookie(response, newAccessToken);
         cookieUtil.addRefreshTokenCookie(response, newRefreshToken);
 
-        return toLoginResponse(user);
+        return toLoginResponse(user, newAccessToken, newRefreshToken);
     }
 
     @Override
@@ -352,12 +372,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private LoginResponse toLoginResponse(User user) {
+        return toLoginResponse(user, null, null);
+    }
+
+    private LoginResponse toLoginResponse(User user, String accessToken, String refreshToken) {
         Optional<ChildProfile> childProfileOpt = childProfileRepository.findByUserId(user.getId());
 
         LoginResponse.LoginResponseBuilder builder = LoginResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
-                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toList()));
+                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
+                .accessToken(accessToken)
+                .refreshToken(refreshToken);
 
         if (childProfileOpt.isPresent()) {
             ChildProfile profile = childProfileOpt.get();

@@ -11,6 +11,8 @@ public record LoginResponse(
         List<String> roles,
         Integer level,
         Integer xp,
-        Integer coins
+        Integer coins,
+        String accessToken,
+        String refreshToken
 ) {
 }
