@@ -22,14 +22,18 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final String allowedOrigin;
+    private final List<String> allowedOrigins;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            @Value("${app.cors.allowed-origin:http://localhost:5173}") String allowedOrigin
+            @Value("${app.cors.allowed-origin:http://localhost:5173,https://buddy-exe.vercel.app}") String allowedOrigin
     ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.allowedOrigin = allowedOrigin;
+        // Support comma-separated list of origins
+        this.allowedOrigins = List.of(allowedOrigin.split(",")).stream()
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Bean
@@ -78,7 +82,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(allowedOrigin));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "text/event-stream"));
         configuration.setAllowCredentials(true);
