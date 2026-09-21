@@ -27,9 +27,9 @@ public class JwtProvider {
 
     public JwtProvider(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.access-token.expiration-ms}") long accessTokenExpirationMs,
-            @Value("${jwt.refresh-token.expiration-ms}") long refreshTokenExpirationMs,
-            @Value("${jwt.issuer}") String issuer
+            @Value("${jwt.access-token.expiration-ms:900000}") long accessTokenExpirationMs,
+            @Value("${jwt.refresh-token.expiration-ms:604800000}") long refreshTokenExpirationMs,
+            @Value("${jwt.issuer:buddy-english}") String issuer
     ) {
         this.secretKey = buildSecretKey(secret);
         this.accessTokenExpirationMs = accessTokenExpirationMs;

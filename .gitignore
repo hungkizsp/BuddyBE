@@ -38,7 +38,7 @@ target/
 # Spring Boot / Application
 # ===========================
 # NEVER commit real credentials
-src/main/resources/application.properties
+# src/main/resources/application.properties
 application-local.properties
 application-local.yml
 application-dev.properties
