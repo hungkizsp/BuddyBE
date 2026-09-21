@@ -104,11 +104,10 @@ public class SecurityConfig {
         // Cookies and bearer credentials cannot use a wildcard origin. Use the
         // configured, explicit frontend origins so browser preflight requests
         // are accepted when allowCredentials is enabled.
-        configuration.setAllowedOrigins(allowedOrigins);
-        configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:*",
-                "https://*.vercel.app"
-        ));
+        List<String> allowedOriginPatterns = new ArrayList<>(allowedOrigins);
+        allowedOriginPatterns.add("http://localhost:*");
+        allowedOriginPatterns.add("https://*.vercel.app");
+        configuration.setAllowedOriginPatterns(allowedOriginPatterns);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(
                 "Authorization",
