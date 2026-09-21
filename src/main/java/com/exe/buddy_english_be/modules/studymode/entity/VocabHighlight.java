@@ -37,9 +37,9 @@ public class VocabHighlight extends BaseEntity {
     /**
      * JSON array: [{field:"meaning"|"exampleSentence", start:int, end:int, color:string}]
      */
-    @Column(name = "highlight_data", columnDefinition = "nvarchar(MAX)")
+    @Column(name = "highlight_data", columnDefinition = "LONGTEXT")
     private String highlightData;
 
-    @Column(name = "user_note", columnDefinition = "nvarchar(500)")
+    @Column(name = "user_note", columnDefinition = "VARCHAR(500)")
     private String userNote;
 }

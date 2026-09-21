@@ -18,7 +18,7 @@ public class Mission extends BaseEntity {
     @Column(name = "title", nullable = false, length = 200)
     private String title;
 
-    @Column(name = "description", columnDefinition = "nvarchar(500)")
+    @Column(name = "description", columnDefinition = "VARCHAR(500)")
     private String description;
 
     @Enumerated(EnumType.STRING)

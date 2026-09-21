@@ -29,7 +29,7 @@ public class ConversationMessage extends BaseEntity {
     @Column(name = "sender", length = 10, nullable = false)
     private MessageSender sender;
 
-    @Column(name = "message", columnDefinition = "nvarchar(2000)")
+    @Column(name = "message", columnDefinition = "VARCHAR(2000)")
     private String message;
 
     @Enumerated(EnumType.STRING)
@@ -43,8 +43,8 @@ public class ConversationMessage extends BaseEntity {
     @Column(name = "intent", length = 100)
     private String intent;
 
-    // JSON string of detected entities - nvarchar(max) for SQL Server
-    @Column(name = "entities_json", columnDefinition = "nvarchar(max)")
+    // JSON string of detected entities
+    @Column(name = "entities_json", columnDefinition = "LONGTEXT")
     private String entitiesJson;
 
     @Column(name = "emotion", length = 50)

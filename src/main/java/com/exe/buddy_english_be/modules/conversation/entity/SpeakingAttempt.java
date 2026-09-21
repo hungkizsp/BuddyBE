@@ -35,11 +35,11 @@ public class SpeakingAttempt extends BaseEntity {
     private Scenario scenario;
 
     // Raw speech-to-text output
-    @Column(name = "recognized_text", columnDefinition = "nvarchar(1000)")
+    @Column(name = "recognized_text", columnDefinition = "VARCHAR(1000)")
     private String recognizedText;
 
     // AI-corrected version
-    @Column(name = "corrected_text", columnDefinition = "nvarchar(1000)")
+    @Column(name = "corrected_text", columnDefinition = "VARCHAR(1000)")
     private String correctedText;
 
     @Column(name = "intent", length = 100)

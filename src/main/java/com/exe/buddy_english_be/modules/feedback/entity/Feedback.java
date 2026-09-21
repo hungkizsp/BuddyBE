@@ -24,7 +24,7 @@ public class Feedback extends BaseEntity {
     @Column(name = "rating")
     private Integer rating;
 
-    @Column(name = "comment", columnDefinition = "nvarchar(1000)")
+    @Column(name = "comment", columnDefinition = "VARCHAR(1000)")
     private String comment;
 
     @Column(name = "created_at")

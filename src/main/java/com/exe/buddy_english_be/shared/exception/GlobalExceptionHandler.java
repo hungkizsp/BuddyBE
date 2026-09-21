@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -14,6 +15,11 @@ import com.exe.buddy_english_be.shared.response.ApiResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+        @ExceptionHandler(AsyncRequestNotUsableException.class)
+        public void handleAsyncRequestNotUsableException(AsyncRequestNotUsableException exception) {
+                // Client disconnected from SSE or async stream; ignore gracefully without attempting to write response
+        }
 
         @ExceptionHandler(BusinessException.class)
         public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException exception) {

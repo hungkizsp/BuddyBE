@@ -17,7 +17,7 @@ public class Achievement extends BaseEntity {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "description", columnDefinition = "nvarchar(500)")
+    @Column(name = "description", columnDefinition = "VARCHAR(500)")
     private String description;
 
     @Column(name = "icon", length = 500)
@@ -30,7 +30,7 @@ public class Achievement extends BaseEntity {
     private Integer conditionValue;
 
     // Optional: for complex conditions in the future
-    @Column(name = "condition_json", columnDefinition = "nvarchar(max)")
+    @Column(name = "condition_json", columnDefinition = "LONGTEXT")
     private String conditionJson;
 
     @Column(name = "reward_coin")

@@ -39,7 +39,7 @@ public class ConversationContext extends BaseEntity {
     @Column(name = "context_key", nullable = false, length = 100)
     private String contextKey;
 
-    @Column(name = "context_value", columnDefinition = "nvarchar(max)")
+    @Column(name = "context_value", columnDefinition = "LONGTEXT")
     private String contextValue;
 
     @Enumerated(EnumType.STRING)

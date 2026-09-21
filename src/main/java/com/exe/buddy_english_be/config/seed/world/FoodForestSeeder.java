@@ -136,7 +136,7 @@ public class FoodForestSeeder {
                                 ScenarioStep.builder().scenario(breakfastTrouble).stepOrder(1)
                                                 .buddyMessage("Mình đói quá! Mình muốn ăn một chiếc Egg Sandwich? Bạn hãy tìm Egg và Bread rồi bỏ nó vào nồi nhé!")
                                                 .expectedIntent("MAKE_FOOD").expectedEntity("EGG_ON_TOAST")
-                                                .successResponse("Chà! Egg Sanchwich trông ngon quá!")
+                                                .successResponse("Chà! Sữa nhìn trông hấp dẫn quá!")
                                                 .failResponse("Hmm... Mình muốn Egg Sanchwich. Thử bỏ egg và bread vào nồi nhé!")
                                                 .build(),
                                 ScenarioStep.builder().scenario(breakfastTrouble).stepOrder(2)

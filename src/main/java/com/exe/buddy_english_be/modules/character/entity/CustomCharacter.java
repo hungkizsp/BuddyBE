@@ -25,7 +25,7 @@ public class CustomCharacter extends BaseEntity {
     @Column(name = "character_name", length = 100)
     private String characterName;
 
-    @Column(name = "prompt", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "prompt", columnDefinition = "LONGTEXT")
     private String prompt;
 
     @Column(name = "art_style", length = 50)

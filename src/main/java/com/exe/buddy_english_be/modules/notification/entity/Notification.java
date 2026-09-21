@@ -21,7 +21,7 @@ public class Notification extends BaseEntity {
     @Column(name = "title", length = 200)
     private String title;
 
-    @Column(name = "message", columnDefinition = "nvarchar(500)")
+    @Column(name = "message", columnDefinition = "VARCHAR(500)")
     private String message;
 
     @Column(name = "type", length = 50)

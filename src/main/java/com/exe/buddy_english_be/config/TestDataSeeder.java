@@ -10,8 +10,11 @@ import com.exe.buddy_english_be.config.seed.RoleSeeder;
 import com.exe.buddy_english_be.config.seed.UserSeeder;
 import com.exe.buddy_english_be.config.seed.VocabularySeeder;
 import com.exe.buddy_english_be.config.seed.world.FoodForestSeeder;
+import com.exe.buddy_english_be.modules.learning.repository.WorldRepository;
 import com.exe.buddy_english_be.modules.profile.entity.ChildProfile;
 import com.exe.buddy_english_be.modules.user.repository.UserRepository;
+import com.exe.buddy_english_be.modules.vocabulary.entity.VocabularyCategory;
+import com.exe.buddy_english_be.modules.vocabulary.repository.VocabularyCategoryRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,25 +35,31 @@ public class TestDataSeeder implements CommandLineRunner {
     private final MissionSeeder missionSeeder;
     private final RewardSeeder rewardSeeder;
     private final AchievementSeeder achievementSeeder;
+    private final WorldRepository worldRepository;
+    private final VocabularyCategoryRepository categoryRepository;
     private final FoodForestSeeder foodForestSeeder;
 
     @Override
     public void run(String... args) {
-        if (userRepository.findByEmail("testuser@buddy.com").isPresent()) {
-            log.info("Test user already exists — skipping test data seeding.");
-            return;
+        ChildProfile childProfile = null;
+        if (userRepository.findByEmail("testuser@buddy.com").isEmpty()) {
+            log.info("Seeding test user & initial data...");
+            roleSeeder.seed();
+            childProfile = userSeeder.seed();
+            vocabularySeeder.seed(childProfile);
+            missionSeeder.seed();
+            rewardSeeder.seed();
+            achievementSeeder.seed();
+        } else {
+            log.info("Test user already exists — checking other seeders.");
         }
 
-        log.info("Seeding test data for restructured schema...");
-
-        roleSeeder.seed();
-        ChildProfile childProfile = userSeeder.seed();
-        VocabularySeeder.VocabularySeedData vocabularySeedData = vocabularySeeder.seed(childProfile);
-        missionSeeder.seed();
-        rewardSeeder.seed();
-        achievementSeeder.seed();
-        foodForestSeeder.seed(vocabularySeedData.foodCategory());
-
-        log.info("Test data seeding complete.");
+        if (worldRepository.count() == 0) {
+            log.info("Seeding World & Scenario data (FoodForestSeeder)...");
+            VocabularyCategory foodCat = categoryRepository.findByName("Food")
+                    .orElseGet(() -> categoryRepository.save(VocabularyCategory.builder().name("Food").build()));
+            foodForestSeeder.seed(foodCat);
+            log.info("World & Scenario data seeding complete.");
+        }
     }
 }
