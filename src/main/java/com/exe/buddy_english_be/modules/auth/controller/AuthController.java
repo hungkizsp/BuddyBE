@@ -6,11 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.exe.buddy_english_be.modules.auth.dto.LoginRequest;
-import com.exe.buddy_english_be.modules.auth.dto.LoginResponse;
-import com.exe.buddy_english_be.modules.auth.dto.SignupRequest;
+import com.exe.buddy_english_be.modules.auth.dto.*;
 import com.exe.buddy_english_be.modules.auth.service.AuthService;
 import com.exe.buddy_english_be.shared.response.ApiResponse;
 
@@ -37,12 +36,48 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Login successfully", loginResponse));
     }
 
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<LoginResponse>> loginWithGoogle(
+            @Valid @RequestBody GoogleLoginRequest request,
+            HttpServletResponse response) {
+        LoginResponse loginResponse = authService.loginWithGoogle(request, response);
+        return ResponseEntity.ok(ApiResponse.success("Google login successfully", loginResponse));
+    }
+
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<LoginResponse>> register(
             @Valid @RequestBody SignupRequest request,
             HttpServletResponse response) {
         LoginResponse signupResponse = authService.signup(request, response);
-        return ResponseEntity.ok(ApiResponse.success("Registration successful", signupResponse));
+        return ResponseEntity.ok(ApiResponse.success("Registration successful. OTP sent to your email.", signupResponse));
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse<LoginResponse>> verifyEmail(
+            @Valid @RequestBody VerifyEmailRequest request,
+            HttpServletResponse response) {
+        LoginResponse loginResponse = authService.verifyEmail(request, response);
+        return ResponseEntity.ok(ApiResponse.success("Email verified successfully", loginResponse));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse<Void>> resendOtp(@RequestParam String email) {
+        authService.sendVerificationOtp(email);
+        return ResponseEntity.ok(ApiResponse.success("Verification OTP resent successfully", null));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Password reset OTP sent to your email", null));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully. Please log in with your new password.", null));
     }
 
     @PostMapping("/refresh")

@@ -38,6 +38,7 @@ public class TestDataSeeder implements CommandLineRunner {
     private final WorldRepository worldRepository;
     private final VocabularyCategoryRepository categoryRepository;
     private final FoodForestSeeder foodForestSeeder;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
@@ -51,7 +52,12 @@ public class TestDataSeeder implements CommandLineRunner {
             rewardSeeder.seed();
             achievementSeeder.seed();
         } else {
-            log.info("Test user already exists — checking other seeders.");
+            log.info("Test user already exists — ensuring active status & password hash.");
+            userRepository.findByEmail("testuser@buddy.com").ifPresent(user -> {
+                user.setPasswordHash(passwordEncoder.encode("password123"));
+                user.setStatus(com.exe.buddy_english_be.modules.user.enums.UserStatus.ACTIVE);
+                userRepository.save(user);
+            });
         }
 
         if (worldRepository.count() == 0) {
