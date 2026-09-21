@@ -1,6 +1,8 @@
 package com.exe.buddy_english_be.security;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -29,11 +31,27 @@ public class SecurityConfig {
             @Value("${app.cors.allowed-origin:http://localhost:5173,https://buddy-exe.vercel.app}") String allowedOrigin
     ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        // Support comma-separated list of origins
-        this.allowedOrigins = List.of(allowedOrigin.split(",")).stream()
+        // Support comma-separated list of origins while keeping the production
+        // frontend available even if Railway has an incomplete environment value.
+        List<String> configuredOrigins = List.of(allowedOrigin.split(",")).stream()
                 .map(String::trim)
+                .map(origin -> origin.endsWith("/") ? origin.substring(0, origin.length() - 1) : origin)
                 .filter(s -> !s.isBlank())
-                .collect(java.util.stream.Collectors.toList());
+                .filter(s -> !"*".equals(s) && !s.contains("*"))
+                .collect(Collectors.toList());
+
+        List<String> requiredOrigins = List.of(
+                "http://localhost:5173",
+                "https://buddy-exe.vercel.app"
+        );
+
+        this.allowedOrigins = new ArrayList<>();
+        this.allowedOrigins.addAll(requiredOrigins);
+        configuredOrigins.forEach(origin -> {
+            if (!this.allowedOrigins.contains(origin)) {
+                this.allowedOrigins.add(origin);
+            }
+        });
     }
 
     @Bean
@@ -87,6 +105,10 @@ public class SecurityConfig {
         // configured, explicit frontend origins so browser preflight requests
         // are accepted when allowCredentials is enabled.
         configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "https://*.vercel.app"
+        ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
