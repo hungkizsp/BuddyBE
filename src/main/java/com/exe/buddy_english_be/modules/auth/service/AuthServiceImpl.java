@@ -69,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request, HttpServletResponse response) {
-        User user = userRepository.findByEmail(request.email().trim().toLowerCase())
+        User user = userRepository.findByEmailWithRoles(request.email().trim().toLowerCase())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {

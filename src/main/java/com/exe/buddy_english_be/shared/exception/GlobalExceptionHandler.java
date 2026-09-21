@@ -49,13 +49,12 @@ public class GlobalExceptionHandler {
         }
 
         @ExceptionHandler(Exception.class)
-        public ResponseEntity<ApiResponse<Void>> handleUnexpectedException(Exception exception) {
+        public ResponseEntity<ApiResponse<String>> handleUnexpectedException(Exception exception) {
                 exception.printStackTrace();
+                String errorDetail = exception.getClass().getSimpleName() + ": " + (exception.getMessage() != null ? exception.getMessage() : "Unknown error");
 
                 return ResponseEntity
                                 .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-                                .body(ApiResponse.error(
-                                                ErrorCode.INTERNAL_SERVER_ERROR.getMessage(),
-                                                null));
+                                .body(ApiResponse.error(errorDetail, errorDetail));
         }
 }
