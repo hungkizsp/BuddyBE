@@ -30,7 +30,7 @@ public class ChildMemory extends BaseEntity {
     @Column(name = "memory_key", length = 100)
     private String memoryKey;
 
-    @Column(name = "memory_value", columnDefinition = "VARCHAR(500)")
+    @Column(name = "memory_value", columnDefinition = "NVARCHAR(500)")
     private String memoryValue;
 
     @Column(name = "confidence")

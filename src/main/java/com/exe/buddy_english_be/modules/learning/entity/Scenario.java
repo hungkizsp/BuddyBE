@@ -17,10 +17,10 @@ public class Scenario extends BaseEntity {
     @JoinColumn(name = "world_id", nullable = false)
     private World world;
 
-    @Column(name = "title", nullable = false, length = 200, columnDefinition = "VARCHAR(500)")
+    @Column(name = "title", nullable = false, length = 200, columnDefinition = "NVARCHAR(500)")
     private String title;
 
-    @Column(name = "description", columnDefinition = "VARCHAR(500)")
+    @Column(name = "description", columnDefinition = "NVARCHAR(500)")
     private String description;
 
     // dialogue, quiz, roleplay, etc.

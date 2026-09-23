@@ -23,10 +23,10 @@ public class Vocabulary extends BaseEntity {
     @Column(name = "phonetic", length = 100)
     private String phonetic;
 
-    @Column(name = "meaning", columnDefinition = "VARCHAR(500)")
+    @Column(name = "meaning", columnDefinition = "NVARCHAR(500)")
     private String meaning;
 
-    @Column(name = "example_sentence", columnDefinition = "VARCHAR(500)")
+    @Column(name = "example_sentence", columnDefinition = "NVARCHAR(500)")
     private String exampleSentence;
 
     @Column(name = "image_url", length = 500)

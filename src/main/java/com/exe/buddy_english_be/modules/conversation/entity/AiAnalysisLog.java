@@ -20,10 +20,10 @@ public class AiAnalysisLog extends BaseEntity {
     @JoinColumn(name = "attempt_id")
     private SpeakingAttempt attempt;
 
-    @Column(name = "request_json", columnDefinition = "LONGTEXT")
+    @Column(name = "request_json", columnDefinition = "NVARCHAR(MAX)")
     private String requestJson;
 
-    @Column(name = "response_json", columnDefinition = "LONGTEXT")
+    @Column(name = "response_json", columnDefinition = "NVARCHAR(MAX)")
     private String responseJson;
 
     @Column(name = "latency_ms")

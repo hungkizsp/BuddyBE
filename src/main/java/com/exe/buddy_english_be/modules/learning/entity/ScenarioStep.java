@@ -20,7 +20,7 @@ public class ScenarioStep extends BaseEntity {
     @Column(name = "step_order", nullable = false)
     private Integer stepOrder;
 
-    @Column(name = "buddy_message", columnDefinition = "VARCHAR(1000)")
+    @Column(name = "buddy_message", columnDefinition = "NVARCHAR(1000)")
     private String buddyMessage;
 
     @Column(name = "expected_intent", length = 100)
@@ -29,10 +29,10 @@ public class ScenarioStep extends BaseEntity {
     @Column(name = "expected_entity", length = 100)
     private String expectedEntity;
 
-    @Column(name = "success_response", columnDefinition = "VARCHAR(500)")
+    @Column(name = "success_response", columnDefinition = "NVARCHAR(500)")
     private String successResponse;
 
-    @Column(name = "fail_response", columnDefinition = "VARCHAR(500)")
+    @Column(name = "fail_response", columnDefinition = "NVARCHAR(500)")
     private String failResponse;
 
     // Self-join for basic branching. Future: scenario_step_transitions table
